@@ -1,0 +1,24 @@
+name: hsa_agent
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11.13
+  - pip
+  - pip:
+    - python-dotenv>=1.0.0
+    - openai>=2.8.0
+    - google-genai>=1.50.1
+    - google-adk>=1.18.0
+    - ipykernel>=7.0.0
+    - google-search-results>=2.4.0
+
+# To create environment from this file:
+# conda env create -f environment.yml
+#
+# To update environment:
+# conda env update -f environment.yml --prune
+#
+# To export current environment:
+# conda env export > environment.yml
+
