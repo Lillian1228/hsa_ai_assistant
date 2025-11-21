@@ -1,0 +1,10 @@
+# Environment variables - ignore all .env files
+.env
+.env.*
+*.env
+
+# Keep .env.example files (these should be committed)
+!.env.example
+
+.vscode
+
