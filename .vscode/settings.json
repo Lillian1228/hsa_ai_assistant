@@ -1,8 +1,0 @@
-{
-    "python.defaultInterpreterPath": "/Users/chenhuizhang/opt/anaconda3/envs/hsa_agent/bin/python",
-    "python.analysis.extraPaths": [
-        "${workspaceFolder}"
-    ]
-}
-
-

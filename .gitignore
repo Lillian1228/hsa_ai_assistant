@@ -6,5 +6,10 @@
 # Keep .env.example files (these should be committed)
 !.env.example
 
-.vscode
+# IDE directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
