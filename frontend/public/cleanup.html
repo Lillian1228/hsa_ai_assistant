@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cleanup LocalStorage</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+    .info {
+      background: #f6f8fb;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid #1890ff;
+    }
+    .success {
+      background: #f6ffed;
+      border-left-color: #52c41a;
+      color: #52c41a;
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 HSA AI Assistant - Data Cleanup Tool</h1>
+    
+    <div class="info">
+      <strong>说明：</strong> If you see many empty rows in the table, it may be because the data in localStorage is old or damaged.
+    </div>
+
+    <div>
+      <button onclick="viewData()">🔍 View Current Data</button>
+      <button onclick="clearData()">🗑️ Clear All Data</button>
+      <button onclick="resetToDefault()">🔄 Reset to Default Test Data</button>
+      <button onclick="goToApp()">🏠 Return to App</button>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function viewData() {
+      const data = localStorage.getItem('receipt-storage');
+      const output = document.getElementById('output');
+      
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          output.innerHTML = `
+            <div class="info">
+              <h3>📦 Current LocalStorage Data:</h3>
+              <pre>${JSON.stringify(parsed, null, 2)}</pre>
+              <p><strong>allItems Quantity:</strong> ${parsed.state?.allItems?.length || 0}</p>
+              <p><strong>approvedReceipts Quantity:</strong> ${parsed.state?.approvedReceipts?.length || 0}</p>
+            </div>
+          `;
+        } catch (e) {
+          output.innerHTML = `<div class="info" style="border-left-color: #ff4d4f; color: #ff4d4f;">❌ Data Parsing Failed: ${e.message}</div>`;
+        }
+      } else {
+        output.innerHTML = `<div class="info">ℹ️ No data found</div>`;
+      }
+    }
+
+    function clearData() {
+      if (confirm('Are you sure you want to clear all saved data?')) {
+        localStorage.removeItem('receipt-storage');
+        document.getElementById('output').innerHTML = `<div class="info success">✅ Data has been cleared! Please refresh the application page.</div>`;
+      }
+    }
+
+    function resetToDefault() {
+      if (confirm('Are you sure you want to reset to default test data? This will clear all existing data.')) {
+        // Clear old data
+        localStorage.removeItem('receipt-storage');
+        
+        document.getElementById('output').innerHTML = `
+          <div class="info success">
+            ✅ Old data has been cleared!<br><br>
+            Please follow the steps below:<br>
+            1. Click the "Return to App" button<br>
+            2. Refresh the page (Cmd+R or Ctrl+R)<br>
+            3. The application will automatically load the default test data
+          </div>
+        `;
+      }
+    }
+
+    function goToApp() {
+      window.location.href = 'http://localhost:3000';
+    }
+
+    // Automatically display data when the page loads
+    viewData();
+  </script>
+</body>
+</html>
+

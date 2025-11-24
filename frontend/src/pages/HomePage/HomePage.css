@@ -1,0 +1,128 @@
+/**
+ * HomePage Styles
+ */
+
+.home-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Welcome area - compact version */
+.welcome-section-compact {
+  text-align: center;
+  padding: var(--spacing-md) 0;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  margin-bottom: 12px !important;
+}
+
+.welcome-description {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0 auto;
+}
+
+/* Feature card - compact version */
+.feature-card-compact {
+  height: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideIn 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.feature-card-compact:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.feature-card-compact:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.feature-card-compact:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.feature-card-compact:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.feature-card-compact:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.feature-card-compact .ant-card-body {
+  padding: 16px;
+}
+
+.feature-card-compact .anticon {
+  font-size: 28px !important;
+}
+
+/* Upload card - compact version */
+.upload-card-compact {
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  animation: slideIn 0.6s ease-out 0.5s;
+  animation-fill-mode: both;
+}
+
+.upload-card-compact .ant-card-body {
+  padding: var(--spacing-lg);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .welcome-section-compact {
+    padding: var(--spacing-sm) 0;
+  }
+
+  .gradient-text {
+    font-size: 22px !important;
+  }
+
+  .welcome-description {
+    font-size: 14px;
+  }
+
+  .feature-card-compact .ant-card-body {
+    padding: 12px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

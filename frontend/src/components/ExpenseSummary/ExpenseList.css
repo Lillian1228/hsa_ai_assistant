@@ -1,0 +1,19 @@
+/**
+ * ExpenseList Styles
+ */
+
+.expense-list {
+  width: 100%;
+}
+
+.expense-list .ant-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.expense-list .ant-list-item {
+  border: none;
+  padding: 0;
+}
+

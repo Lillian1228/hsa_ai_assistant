@@ -1,0 +1,27 @@
+/**
+ * FilterControls Styles
+ */
+
+.filter-controls-card {
+  border-radius: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filter-controls-card .ant-card-body {
+  padding: 16px;
+}
+
+.filter-controls-card .ant-input,
+.filter-controls-card .ant-select-selector,
+.filter-controls-card .ant-picker {
+  border-radius: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .filter-controls-card .ant-col {
+    margin-bottom: 8px;
+  }
+}
+
