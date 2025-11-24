@@ -1,0 +1,101 @@
+/**
+ * ReceiptUploader Styles
+ */
+
+.receipt-uploader {
+  width: 100%;
+}
+
+.upload-dragger {
+  border-radius: 12px !important;
+  border: 2px dashed rgba(102, 126, 234, 0.3) !important;
+  background: rgba(102, 126, 234, 0.03) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-bottom: 0 !important;
+}
+
+.upload-dragger:hover {
+  border-color: #667eea !important;
+  background: rgba(102, 126, 234, 0.08) !important;
+}
+
+.upload-dragger .ant-upload {
+  padding: 40px 24px !important;
+}
+
+.ant-upload-drag-icon {
+  margin-bottom: 16px;
+}
+
+.ant-upload-drag-icon .anticon {
+  font-size: 48px !important;
+}
+
+.ant-upload-text {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: var(--text-primary) !important;
+  margin: 12px 0 8px !important;
+}
+
+.ant-upload-hint {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Preview area */
+.preview-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+}
+
+.preview-section .ant-upload-list-picture-card {
+  display: flex;
+  justify-content: center;
+}
+
+.preview-section .ant-upload-list-picture-card-container {
+  width: 150px;
+  height: 150px;
+}
+
+.receipt-uploader .ant-upload-list-picture-card .ant-upload-list-item {
+  border-radius: 12px;
+  border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.receipt-uploader .ant-upload-list-picture-card .ant-upload-list-item:hover {
+  border-color: #667eea;
+}
+
+/* Upload button */
+.upload-button {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.upload-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.upload-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.upload-button:disabled {
+  background: #d9d9d9;
+  box-shadow: none;
+  transform: none;
+}
+

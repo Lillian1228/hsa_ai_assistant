@@ -1,0 +1,212 @@
+/**
+ * ReceiptReview Styles
+ */
+
+.receipt-review {
+  width: 100%;
+  max-width: 1400px; /* Increased for side-by-side layout */
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.review-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Left-Right Layout */
+.review-content-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Left: Receipt Image Section */
+.receipt-image-section {
+  flex: 0 0 400px; /* Fixed width for image */
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+/* Right: Receipt Info Section */
+.receipt-info-section {
+  flex: 1;
+  min-width: 0; /* Allow flex item to shrink */
+}
+
+.receipt-info-section.full-width {
+  flex: 1 1 100%;
+}
+
+.receipt-info-section.with-image {
+  flex: 1 1 calc(100% - 424px); /* Account for image width + gap */
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 1200px) {
+  .review-content-layout {
+    flex-direction: column;
+  }
+  
+  .receipt-image-section {
+    flex: 1 1 100%;
+    position: relative;
+    top: 0;
+    max-height: 500px;
+  }
+  
+  .receipt-info-section.with-image {
+    flex: 1 1 100%;
+  }
+}
+
+.review-header .gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px !important;
+}
+
+/* Card styles */
+.receipt-info-card,
+.items-card,
+.total-card,
+.receipt-image-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.receipt-info-card:hover,
+.items-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.receipt-info-card .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.eligible-card .ant-card-head {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.1) 0%, rgba(82, 196, 26, 0.05) 100%);
+  border-bottom: 2px solid rgba(82, 196, 26, 0.3);
+}
+
+.non-eligible-card .ant-card-head {
+  background: linear-gradient(135deg, rgba(255, 77, 79, 0.1) 0%, rgba(255, 77, 79, 0.05) 100%);
+  border-bottom: 2px solid rgba(255, 77, 79, 0.3);
+}
+
+.unsure-card .ant-card-head {
+  background: linear-gradient(135deg, rgba(250, 173, 20, 0.1) 0%, rgba(250, 173, 20, 0.05) 100%);
+  border-bottom: 2px solid rgba(250, 173, 20, 0.3);
+}
+
+/* Receipt Image Card Styles */
+.receipt-image-card {
+  height: 100%;
+}
+
+.receipt-image-card .ant-card-head {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.receipt-image-card .ant-card-body {
+  padding: 16px;
+}
+
+.receipt-image-container {
+  text-align: center;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.receipt-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.receipt-image:hover {
+  transform: scale(1.02);
+}
+
+.total-card {
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.05) 0%, rgba(82, 196, 26, 0.02) 100%);
+  border: 2px solid rgba(82, 196, 26, 0.3);
+}
+
+/* Compact total card - single line */
+.total-card-compact {
+  border-radius: 12px;
+  border: 2px solid rgba(82, 196, 26, 0.3);
+  background: linear-gradient(135deg, rgba(82, 196, 26, 0.08) 0%, rgba(82, 196, 26, 0.03) 100%);
+}
+
+.total-card-compact .ant-card-body {
+  padding: 16px 24px;
+}
+
+.total-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.action-buttons .ant-btn {
+  min-width: 150px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.action-buttons .ant-btn-primary {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+}
+
+.action-buttons .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.4);
+}
+
+.action-buttons .ant-btn:not(.ant-btn-primary) {
+  border: 2px solid #d9d9d9;
+}
+
+.action-buttons .ant-btn:not(.ant-btn-primary):hover {
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .ant-btn {
+    width: 100%;
+  }
+}
+
