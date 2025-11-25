@@ -82,24 +82,38 @@ def approve_review(
         if not isinstance(approved_items, list):
             return "Error: Items must be a JSON array", []
         
-        # Convert approved items to ReviewItem objects (only HSA eligible items)
+        # Convert approved items to ReviewItem objects for all three categories
         # Validate each item has required fields
         approved_hsa_eligible_items = []
+        approved_non_hsa_eligible_items = []
+        approved_unsure_hsa_items = []
+        
         for item in approved_items:
             if not isinstance(item, dict):
                 continue
-            if item.get("category") == "hsa_eligible":
-                # Ensure required fields are present
-                if "name" not in item or "price" not in item:
-                    continue
-                try:
-                    approved_hsa_eligible_items.append(ReviewItem(**item))
-                except Exception as e:
-                    return f"Error: Invalid item format - {str(e)}", []
+            # Ensure required fields are present
+            if "name" not in item or "price" not in item:
+                continue
+            
+            category = item.get("category", "")
+            try:
+                # Filter out category field when creating ReviewItem (category is not part of ReviewItem schema)
+                item_for_review = {k: v for k, v in item.items() if k != "category"}
+                review_item = ReviewItem(**item_for_review)
+                if category == "hsa_eligible":
+                    approved_hsa_eligible_items.append(review_item)
+                elif category == "non_hsa_eligible":
+                    approved_non_hsa_eligible_items.append(review_item)
+                elif category == "unsure_hsa":
+                    approved_unsure_hsa_items.append(review_item)
+            except Exception as e:
+                return f"Error: Invalid item format - {str(e)}", []
         
         review_response = ReceiptReviewResponse(
             receipt_id=receipt_id,
             approved_hsa_eligible_items=approved_hsa_eligible_items,
+            approved_non_hsa_eligible_items=approved_non_hsa_eligible_items,
+            approved_unsure_hsa_items=approved_unsure_hsa_items,
             store_name=store_name,
             date=date,
             total_cost=total_cost,
@@ -120,10 +134,13 @@ def approve_review(
         # Get the items count from the response
         items = result.get("items", [])
         items_count = len(items)
-        approved_count = len(approved_hsa_eligible_items)
+        hsa_count = len(approved_hsa_eligible_items)
+        non_hsa_count = len(approved_non_hsa_eligible_items)
+        unsure_count = len(approved_unsure_hsa_items)
+        total_count = hsa_count + non_hsa_count + unsure_count
         
         # Return message and items data for table display
-        message = f"Receipt stored successfully! {approved_count} HSA eligible item(s) have been saved. Total items in database: {items_count}."
+        message = f"Receipt stored successfully! All {total_count} item(s) stored in Firestore ({hsa_count} HSA eligible, {non_hsa_count} non-HSA eligible, {unsure_count} unsure). {hsa_count} HSA eligible item(s) stored in SQL database. Total items in SQL database: {items_count}."
         return message, items
     except Exception as e:
         return f"Error approving review: {str(e)}", []
@@ -194,9 +211,19 @@ def get_response_from_llm_backend(
                     json_data = json_module.loads(json_str)
                     if isinstance(json_data, dict) and "review_request" in json_data:
                         review_data = json_data["review_request"]
-                        hsa_eligible_items = [ReviewItem(**item) for item in review_data.get("hsa_eligible_items", [])]
-                        non_hsa_eligible_items = [ReviewItem(**item) for item in review_data.get("non_hsa_eligible_items", [])]
-                        unsure_hsa_items = [ReviewItem(**item) for item in review_data.get("unsure_hsa_items", [])]
+                        # Filter out category field when creating ReviewItem (category is not part of ReviewItem schema)
+                        hsa_eligible_items = [
+                            ReviewItem(**{k: v for k, v in item.items() if k != "category"}) 
+                            for item in review_data.get("hsa_eligible_items", [])
+                        ]
+                        non_hsa_eligible_items = [
+                            ReviewItem(**{k: v for k, v in item.items() if k != "category"}) 
+                            for item in review_data.get("non_hsa_eligible_items", [])
+                        ]
+                        unsure_hsa_items = [
+                            ReviewItem(**{k: v for k, v in item.items() if k != "category"}) 
+                            for item in review_data.get("unsure_hsa_items", [])
+                        ]
                         review_request = ReceiptReviewRequest(
                             receipt_id=review_data.get("receipt_id", ""),
                             store_name=review_data.get("store_name", ""),
@@ -298,6 +325,7 @@ if __name__ == "__main__":
 You can edit the JSON below to modify items:
 - **Change category**: Set `"category": "hsa_eligible"`, `"category": "non_hsa_eligible"`, or `"category": "unsure_hsa"` to move items between categories
 - **Edit names**: Modify the `"name"` field to correct item names
+- **Edit descriptions**: Modify the `"description"` field to add or update product descriptions (useful for abbreviated item names)
 - **Edit prices**: Adjust the `"price"` field if needed
 - **Edit quantities**: Change the `"quantity"` field
 - **Add/Remove items**: You can add new items or remove items from the array
@@ -490,11 +518,13 @@ You can edit the JSON below to modify items:
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
+                            <th>Description</th>
                             <th>Price</th>
                             <th>Quantity</th>
-                            <th>Category</th>
                             <th>Store Name</th>
                             <th>Date</th>
+                            <th>Payment Card</th>
+                            <th>Card Last 4</th>
                             <th>Image</th>
                         </tr>
                     </thead>
@@ -517,15 +547,24 @@ You can edit the JSON below to modify items:
                         else:
                             image_link_html = image_url
                     
+                    description = item.get("description", "") or ""
+                    # If description is empty, show a dash or the name
+                    description_display = description if description else "-"
+                    
+                    payment_card = item.get("payment_card", "") or "-"
+                    card_last_four = item.get("card_last_four_digit", "") or "-"
+                    
                     table_html += f"""
                         <tr>
                             <td>{item.get("id", "")}</td>
                             <td>{item.get("name", "")}</td>
+                            <td>{description_display}</td>
                             <td>${item.get("price", 0):.2f}</td>
                             <td>{item.get("quantity", 1)}</td>
-                            <td>{item.get("category", "")}</td>
                             <td>{item.get("store_name", "")}</td>
                             <td>{item.get("date", "")}</td>
+                            <td>{payment_card}</td>
+                            <td>{card_last_four}</td>
                             <td>{image_link_html if image_link_html else "N/A"}</td>
                         </tr>
                     """

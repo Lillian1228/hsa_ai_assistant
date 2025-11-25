@@ -350,13 +350,31 @@ async def review(
         import datetime as dt
         
         # Convert ReviewItem objects to dicts for store_receipt_data
-        purchased_items = [
+        hsa_eligible_items = [
             {
                 "name": item.name,
                 "price": item.price,
                 "quantity": item.quantity,
             }
             for item in review_response.approved_hsa_eligible_items
+        ]
+        
+        non_hsa_eligible_items = [
+            {
+                "name": item.name,
+                "price": item.price,
+                "quantity": item.quantity,
+            }
+            for item in review_response.approved_non_hsa_eligible_items
+        ]
+        
+        unsure_hsa_items = [
+            {
+                "name": item.name,
+                "price": item.price,
+                "quantity": item.quantity,
+            }
+            for item in review_response.approved_unsure_hsa_items
         ]
         
         # Convert date to transaction_time format (ISO format) for database storage
@@ -374,15 +392,16 @@ async def review(
                 # If parsing fails, use the date as-is and let store_receipt_data validate
                 pass
         
-        # Store only approved HSA eligible items in Firestore (for backward compatibility)
-        # Note: store_receipt_data still uses transaction_time and total_amount for database compatibility
+        # Store all items (all three categories) in Firestore
         result = store_receipt_data(
             image_id=review_response.receipt_id,
             store_name=review_response.store_name,
             transaction_time=transaction_time,
             total_amount=review_response.total_cost,
-            purchased_items=purchased_items,
+            hsa_eligible_items=hsa_eligible_items,
             currency="USD",  # Default currency, can be updated if needed
+            non_hsa_eligible_items=non_hsa_eligible_items,
+            unsure_hsa_items=unsure_hsa_items,
         )
         
         # Get the image URL for the receipt
@@ -399,13 +418,13 @@ async def review(
             )
             logger.warning(f"Image URL not found in tracked URLs, constructed: {image_url}")
         
-        # Prepare items for SQL insertion with category
+        # Prepare items for SQL insertion
         items_for_sql = [
             {
                 "name": item.name,
+                "description": getattr(item, "description", "") or "",  # Get description or default to empty string
                 "price": item.price,
-                "quantity": item.quantity,
-                "category": item.category,
+                "quantity": item.quantity
             }
             for item in review_response.approved_hsa_eligible_items
         ]
@@ -416,12 +435,16 @@ async def review(
             store_name=review_response.store_name,
             date=review_response.date,
             image_url=image_url,
+            payment_card=review_response.payment_card,
+            card_last_four_digit=review_response.card_last_four_digit,
         )
         
         logger.info(
             "Receipt review approved and stored",
             receipt_id=review_response.receipt_id,
-            hsa_eligible_items_count=len(purchased_items),
+            hsa_eligible_items_count=len(hsa_eligible_items),
+            non_hsa_eligible_items_count=len(non_hsa_eligible_items),
+            unsure_hsa_items_count=len(unsure_hsa_items),
             image_url=image_url,
         )
         

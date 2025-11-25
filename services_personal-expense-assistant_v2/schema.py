@@ -50,15 +50,15 @@ class ReviewItem(BaseModel):
     """Model for a single item in review.
     
     Attributes:
-        name: The name of the item.
+        name: The name of the item (may be abbreviated on receipt).
+        description: Optional detailed description of the product (expanded from abbreviation if needed).
         price: The price of the item.
         quantity: The quantity of the item.
-        category: The category of the item (hsa_eligible, non_hsa_eligible, or unsure_hsa).
     """
     name: str
+    description: Optional[str] = ""  # Product description, expanded from abbreviation if needed
     price: float
     quantity: int = 1
-    category: str  # "hsa_eligible", "non_hsa_eligible", or "unsure_hsa"
 
 
 class ReceiptReviewRequest(BaseModel):
@@ -92,6 +92,8 @@ class ReceiptReviewResponse(BaseModel):
     Attributes:
         receipt_id: The image ID of the receipt.
         approved_hsa_eligible_items: List of approved HSA eligible items to store.
+        approved_non_hsa_eligible_items: List of approved non-HSA eligible items to store.
+        approved_unsure_hsa_items: List of approved unsure HSA items to store.
         store_name: The name of the store (from original review request).
         date: The date of purchase (from original review request).
         total_cost: The total amount spent (from original review request).
@@ -100,6 +102,8 @@ class ReceiptReviewResponse(BaseModel):
     """
     receipt_id: str
     approved_hsa_eligible_items: List[ReviewItem]
+    approved_non_hsa_eligible_items: List[ReviewItem] = []
+    approved_unsure_hsa_items: List[ReviewItem] = []
     store_name: str
     date: str
     total_cost: float

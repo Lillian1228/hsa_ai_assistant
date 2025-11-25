@@ -42,15 +42,27 @@ class Database:
                 CREATE TABLE IF NOT EXISTS approved_items (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
+                    description TEXT DEFAULT '',
                     price REAL NOT NULL,
                     quantity INTEGER NOT NULL DEFAULT 1,
-                    category TEXT NOT NULL,
                     store_name TEXT NOT NULL,
                     date TEXT NOT NULL,
                     image_url TEXT NOT NULL,
+                    payment_card TEXT DEFAULT '',
+                    card_last_four_digit TEXT DEFAULT '',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            # Try to drop category column if it exists (for existing databases)
+            try:
+                # SQLite 3.35.0+ supports DROP COLUMN
+                cursor.execute("ALTER TABLE approved_items DROP COLUMN category")
+                conn.commit()
+                logger.info("Removed category column from existing database")
+            except sqlite3.OperationalError:
+                # Column doesn't exist or SQLite version doesn't support DROP COLUMN
+                pass
+            
             conn.commit()
             logger.info("Database initialized successfully")
     
@@ -70,34 +82,83 @@ class Database:
         store_name: str,
         date: str,
         image_url: str,
+        payment_card: str = "",
+        card_last_four_digit: str = "",
     ) -> None:
         """
-        Insert approved items into the database.
+        Insert approved items into the database, skipping duplicates.
+        
+        An item is considered a duplicate if it has the same name, description, price,
+        quantity, store_name, date, and image_url (same receipt).
         
         Args:
-            items: List of approved items with name, price, quantity, category
+            items: List of approved items with name, price, quantity
             store_name: Name of the store
             date: Date of purchase
             image_url: URL of the receipt image
+            payment_card: Payment card type or name
+            card_last_four_digit: Last four digits of the payment card
         """
         with self._get_connection() as conn:
             cursor = conn.cursor()
+            inserted_count = 0
+            skipped_count = 0
+            
             for item in items:
+                # Check if this item already exists (duplicate check)
                 cursor.execute("""
-                    INSERT INTO approved_items 
-                    (name, price, quantity, category, store_name, date, image_url)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    SELECT COUNT(*) FROM approved_items
+                    WHERE name = ? 
+                    AND description = ?
+                    AND price = ?
+                    AND quantity = ?
+                    AND store_name = ?
+                    AND date = ?
+                    AND image_url = ?
                 """, (
                     item.get("name", ""),
+                    item.get("description", ""),
                     item.get("price", 0.0),
                     item.get("quantity", 1),
-                    item.get("category", ""),
                     store_name,
                     date,
                     image_url,
                 ))
+                
+                count = cursor.fetchone()[0]
+                
+                if count == 0:
+                    # Item doesn't exist, insert it
+                    cursor.execute("""
+                        INSERT INTO approved_items 
+                        (name, description, price, quantity, store_name, date, image_url, payment_card, card_last_four_digit)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        item.get("name", ""),
+                        item.get("description", ""),
+                        item.get("price", 0.0),
+                        item.get("quantity", 1),
+                        store_name,
+                        date,
+                        image_url,
+                        payment_card,
+                        card_last_four_digit,
+                    ))
+                    inserted_count += 1
+                else:
+                    # Item already exists, skip it
+                    skipped_count += 1
+                    logger.debug(
+                        f"Skipped duplicate item: {item.get('name', '')} "
+                        f"(price: {item.get('price', 0.0)}, quantity: {item.get('quantity', 1)}) "
+                        f"from {store_name} on {date}"
+                    )
+            
             conn.commit()
-            logger.info(f"Inserted {len(items)} approved items into database")
+            logger.info(
+                f"Inserted {inserted_count} approved items into database, "
+                f"skipped {skipped_count} duplicates"
+            )
     
     def get_all_items(self) -> List[Dict[str, Any]]:
         """
@@ -112,12 +173,14 @@ class Database:
                 SELECT 
                     id,
                     name,
+                    description,
                     price,
                     quantity,
-                    category,
                     store_name,
                     date,
                     image_url,
+                    payment_card,
+                    card_last_four_digit,
                     created_at
                 FROM approved_items
                 ORDER BY created_at DESC
@@ -144,12 +207,14 @@ class Database:
                 SELECT 
                     id,
                     name,
+                    description,
                     price,
                     quantity,
-                    category,
                     store_name,
                     date,
                     image_url,
+                    payment_card,
+                    card_last_four_digit,
                     created_at
                 FROM approved_items
                 WHERE date >= ? AND date <= ?
@@ -158,35 +223,4 @@ class Database:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
     
-    def get_items_by_category(
-        self, category: str
-    ) -> List[Dict[str, Any]]:
-        """
-        Get approved items by category.
-        
-        Args:
-            category: Category to filter by (hsa_eligible, non_hsa_eligible, unsure_hsa)
-        
-        Returns:
-            List of dictionaries containing approved items with the specified category
-        """
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT 
-                    id,
-                    name,
-                    price,
-                    quantity,
-                    category,
-                    store_name,
-                    date,
-                    image_url,
-                    created_at
-                FROM approved_items
-                WHERE category = ?
-                ORDER BY date DESC, created_at DESC
-            """, (category,))
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
 

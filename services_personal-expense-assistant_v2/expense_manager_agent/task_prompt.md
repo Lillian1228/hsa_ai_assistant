@@ -32,7 +32,8 @@ when available:
 4. Payment card type/name
 5. Last four digits of the payment card
 6. Individual items purchased with their prices
-7. **Categorize each item for HSA (Health Savings Account) eligibility: "hsa_eligible", "non_hsa_eligible", or "unsure_hsa"**
+7. **Product descriptions**: For each item, if the name on the receipt is abbreviated or unclear, provide a detailed description in the "description" field. This helps users understand what the item actually is. If the name is already clear and complete, the description can be empty or the same as the name.
+8. **Categorize each item for HSA (Health Savings Account) eligibility: "hsa_eligible", "non_hsa_eligible", or "unsure_hsa"**
 
 HSA eligible items include: prescription medications, medical devices, first aid supplies, over-the-counter medications (with prescription), medical equipment, dental care products, vision care products, hearing aids, medical services, etc.
 
@@ -114,25 +115,25 @@ Only do this for valid receipt images.
       "hsa_eligible_items": [
         {
           "name": "Item Name",
+          "description": "Full product description if name is abbreviated",
           "price": 10.0,
-          "quantity": 1,
-          "category": "hsa_eligible"
+          "quantity": 1
         }
       ],
       "non_hsa_eligible_items": [
         {
           "name": "Item Name",
+          "description": "Full product description if name is abbreviated",
           "price": 5.0,
-          "quantity": 1,
-          "category": "non_hsa_eligible"
+          "quantity": 1
         }
       ],
       "unsure_hsa_items": [
         {
           "name": "Item Name",
+          "description": "Full product description if name is abbreviated",
           "price": 3.0,
-          "quantity": 1,
-          "category": "unsure_hsa"
+          "quantity": 1
         }
       ],
       "payment_card": "Visa",
