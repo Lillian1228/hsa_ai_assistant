@@ -85,7 +85,7 @@ def request_receipt_review(
             - price (float): The price of the item.
             - quantity (int, optional): The quantity of the item. Defaults to 1 if not provided.
         payment_card (str): The payment card type or name (e.g., "Visa", "Mastercard", "American Express").
-        card_last_four_digit (str): The last four digits of the payment card.
+        card_last_four_digit (str, optional): The last four digits of the payment card. If paid in cash or gift card this can be missing. Defaults to empty string.
 
     Returns:
         str: A message indicating that review has been requested. The agent should then
