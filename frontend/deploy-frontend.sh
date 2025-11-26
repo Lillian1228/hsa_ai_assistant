@@ -37,9 +37,6 @@ IMAGE_NAME="gcr.io/$PROJECT_ID/$SERVICE_NAME"
 echo "步骤 1/2: 构建 Docker 镜像..."
 echo ""
 
-# 回到仓库根目录
-cd ..
-
 # 创建临时 Dockerfile（在构建时注入后端 URL）
 cat > Dockerfile.frontend.tmp <<EOF
 # Stage 1: Build React frontend
@@ -48,13 +45,13 @@ FROM node:18-alpine AS frontend-builder
 WORKDIR /frontend
 
 # 复制 package 文件
-COPY frontend/package*.json ./
+COPY package*.json ./
 
 # 安装依赖
 RUN npm ci
 
-# 复制源代码
-COPY frontend/ ./
+# 复制源代码（.dockerignore 会自动排除不需要的文件）
+COPY . ./
 
 # 设置后端 API URL
 RUN echo "VITE_API_BASE_URL=$BACKEND_URL" > .env
@@ -69,7 +66,7 @@ FROM nginx:alpine
 COPY --from=frontend-builder /frontend/dist /usr/share/nginx/html
 
 # 复制 nginx 配置
-COPY services_personal-expense-assistant_v2/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 8082
 
@@ -91,9 +88,8 @@ gcloud builds submit --config cloudbuild_frontend.yaml .
 # 清理临时文件
 rm Dockerfile.frontend.tmp cloudbuild_frontend.yaml
 
-# 回到服务目录
-cd services_personal-expense-assistant_v2
-
+echo ""
+echo "✅ 镜像构建完成"
 echo ""
 echo "步骤 2/2: 部署到 Cloud Run..."
 echo ""
