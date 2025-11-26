@@ -27,17 +27,20 @@ usage() {
     echo "  -p, --project PROJECT_ID    Google Cloud project ID (default: current gcloud project)"
     echo "  -r, --region REGION          Cloud Run region (default: us-central1)"
     echo "  -n, --name SERVICE_NAME      Cloud Run service name (default: hsa-ai-assistant)"
-    echo "  -f, --frontend-type TYPE     Frontend type: react|gradio|backend (default: react)"
+    echo "  -f, --frontend-type TYPE     Frontend type: react|react-only|gradio|backend (default: react)"
     echo "  -m, --memory MEMORY          Memory allocation (default: 2Gi)"
     echo "  -c, --cpu CPU                CPU allocation (default: 2)"
     echo "  -h, --help                   Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0                           # Deploy with defaults (React frontend)"
+    echo "  $0                           # Deploy with defaults (React frontend + Backend)"
+    echo "  $0 -f react-only             # Deploy React frontend ONLY (lighter, faster)"
     echo "  $0 -f gradio                 # Deploy with Gradio frontend"
     echo "  $0 -f backend                # Deploy backend only"
     echo "  $0 -p my-project -r us-west1 # Deploy to specific project and region"
 }
+
+FRONTEND_TYPE="react"  # Default frontend type
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -55,9 +58,15 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -f|--frontend-type)
+            FRONTEND_TYPE="$2"
             case $2 in
                 react)
                     FRONTEND_PORT=8082
+                    ;;
+                react-only)
+                    FRONTEND_PORT=8082
+                    MEMORY="512Mi"  # Frontend only needs less memory
+                    CPU="1"         # Frontend only needs less CPU
                     ;;
                 gradio)
                     FRONTEND_PORT=8080
@@ -66,7 +75,7 @@ while [[ $# -gt 0 ]]; do
                     FRONTEND_PORT=8081
                     ;;
                 *)
-                    echo -e "${RED}Error: Invalid frontend type. Use: react|gradio|backend${NC}"
+                    echo -e "${RED}Error: Invalid frontend type. Use: react|react-only|gradio|backend${NC}"
                     exit 1
                     ;;
             esac
@@ -135,15 +144,32 @@ gcloud config set project $PROJECT_ID
 # Image name
 IMAGE_NAME="gcr.io/$PROJECT_ID/$SERVICE_NAME"
 
+# Determine Dockerfile to use
+DOCKERFILE="services_personal-expense-assistant_v2/Dockerfile"
+if [ "$FRONTEND_TYPE" == "react-only" ]; then
+    DOCKERFILE="services_personal-expense-assistant_v2/Dockerfile.frontend"
+    echo -e "${YELLOW}Using frontend-only Dockerfile: $DOCKERFILE${NC}"
+fi
+
 # Step 1: Build with Cloud Build
 echo ""
 echo -e "${YELLOW}Step 1/3: Building Docker image with Cloud Build...${NC}"
 cd ..  # Go to repository root
-gcloud builds submit \
-    --tag $IMAGE_NAME \
-    --dockerfile services_personal-expense-assistant_v2/Dockerfile \
-    --timeout=20m \
-    .
+
+# Create a temporary cloudbuild.yaml because gcloud builds submit --dockerfile is not supported
+cat > cloudbuild_temp.yaml <<EOF
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', '$DOCKERFILE', '-t', '$IMAGE_NAME', '.']
+images:
+  - '$IMAGE_NAME'
+timeout: 1200s
+EOF
+
+gcloud builds submit --config cloudbuild_temp.yaml .
+
+# Clean up
+rm cloudbuild_temp.yaml
 
 # Go back to services directory
 cd services_personal-expense-assistant_v2
@@ -196,6 +222,11 @@ echo ""
 
 if [ $FRONTEND_PORT -eq 8082 ]; then
     echo "1. Update the backend API URL in Dockerfile:"
+    if [ "$FRONTEND_TYPE" == "react-only" ]; then
+        echo "   Edit services_personal-expense-assistant_v2/Dockerfile.frontend"
+    else
+        echo "   Edit services_personal-expense-assistant_v2/Dockerfile"
+    fi
     echo "   RUN echo \"VITE_API_BASE_URL=$SERVICE_URL\" > .env"
     echo ""
     echo "2. Rebuild and redeploy:"

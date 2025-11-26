@@ -51,7 +51,7 @@ export interface Attachment {
  * Contains receipt data and chat response
  */
 export interface ReceiptResponse {
-  receipt_review_request?: ReceiptReviewRequest; // Optional, only present when receipt is detected
+  review_request?: ReceiptReviewRequest; // Optional, only present when receipt is detected
   response: string; // Always present, should be displayed in chatbox
   thinking_process: string;
   attachments: Attachment[];
