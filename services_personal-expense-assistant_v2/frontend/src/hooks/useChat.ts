@@ -46,12 +46,12 @@ export const useChat = (sessionId: string, userId: string) => {
       }
 
       // Check if response contains receipt review request
-      if (response.receipt_review_request) {
+      if (response.review_request) {
         // Convert ReceiptReviewRequest to ReceiptData format
         const receiptData = {
-          store_name: response.receipt_review_request.store_name,
-          date: new Date(response.receipt_review_request.date),
-          eligible_items: response.receipt_review_request.eligible_items.map((item, index) => ({
+          store_name: response.review_request.store_name,
+          date: new Date(response.review_request.date),
+          eligible_items: response.review_request.eligible_items.map((item, index) => ({
             id: `eligible-${index}`,
             name: item.name,
             price: item.price,
@@ -59,7 +59,7 @@ export const useChat = (sessionId: string, userId: string) => {
             description: item.description,
             is_eligible: true,
           })),
-          non_eligible_items: response.receipt_review_request.non_eligible_items.map((item, index) => ({
+          non_eligible_items: response.review_request.non_eligible_items.map((item, index) => ({
             id: `non-eligible-${index}`,
             name: item.name,
             price: item.price,
@@ -67,7 +67,7 @@ export const useChat = (sessionId: string, userId: string) => {
             description: item.description,
             is_eligible: false,
           })),
-          unsure_items: response.receipt_review_request.unsure_items.map((item, index) => ({
+          unsure_items: response.review_request.unsure_items.map((item, index) => ({
             id: `unsure-${index}`,
             name: item.name,
             price: item.price,
@@ -75,9 +75,9 @@ export const useChat = (sessionId: string, userId: string) => {
             description: item.description,
             is_eligible: false,
           })),
-          payment_card: response.receipt_review_request.payment_card,
-          card_last_four_digit: response.receipt_review_request.card_last_four_digit,
-          total_cost: response.receipt_review_request.total_cost,
+          payment_card: response.review_request.payment_card,
+          card_last_four_digit: response.review_request.card_last_four_digit,
+          total_cost: response.review_request.total_cost,
           image_url: response.image_url,
         };
         
