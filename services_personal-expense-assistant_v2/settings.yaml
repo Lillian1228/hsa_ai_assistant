@@ -14,6 +14,6 @@
 
 GCLOUD_LOCATION: "us-central1"
 GCLOUD_PROJECT_ID: "magnetic-signer-451121-g4"
-# BACKEND_URL: "http://localhost:8081/chat"
-# STORAGE_BUCKET_NAME: "personal-expense-hsa-expense-agent"
-# DB_COLLECTION_NAME: "personal-expense-assistant-receipts"
+BACKEND_URL: "http://localhost:8081/chat"
+STORAGE_BUCKET_NAME: "personal-expense-hsa-expense-agent"
+DB_COLLECTION_NAME: "personal-expense-assistant-receipts"
