@@ -60,14 +60,14 @@ RUN uv sync --frozen
 COPY --from=frontend-builder /frontend/dist /app/frontend-dist
 
 # Copy nginx configuration
-COPY services_personal-expense-assistant_v2/nginx.conf /etc/nginx/sites-available/frontend
+COPY nginx.conf /etc/nginx/sites-available/frontend
 
 # Enable the site and remove default
 RUN ln -s /etc/nginx/sites-available/frontend /etc/nginx/sites-enabled/frontend \
     && rm -f /etc/nginx/sites-enabled/default
 
 # Copy supervisord configuration
-COPY services_personal-expense-assistant_v2/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose ports
 # 8080: Gradio frontend (optional, if you still want to keep it)
