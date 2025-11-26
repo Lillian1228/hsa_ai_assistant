@@ -6,6 +6,7 @@ import { ItemBasic } from './item';
  * Used for Review page (using ItemBasic simplified information)
  */
 export interface ReceiptData {
+  receipt_id: string; // Receipt ID from backend
   store_name: string;
   date: Date;
   eligible_items: ItemBasic[];

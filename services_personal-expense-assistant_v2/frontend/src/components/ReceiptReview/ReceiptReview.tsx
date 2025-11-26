@@ -165,11 +165,12 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
 
       // Call API
       const response = await apiService.approveReceipt({
+        receipt_id: editedData.receipt_id,
         store_name: editedData.store_name,
         date: editedData.date.toISOString(), // Convert Date to ISO string
-        eligible_items: convertToReceiptItem(editedData.eligible_items),
-        non_eligible_items: convertToReceiptItem(editedData.non_eligible_items),
-        unsure_items: convertToReceiptItem(editedData.unsure_items),
+        approved_hsa_eligible_items: convertToReceiptItem(editedData.eligible_items),
+        approved_non_hsa_eligible_items: convertToReceiptItem(editedData.non_eligible_items),
+        approved_unsure_hsa_items: convertToReceiptItem(editedData.unsure_items),
         payment_card: editedData.payment_card,
         card_last_four_digit: editedData.card_last_four_digit,
         total_cost: editedData.total_cost,

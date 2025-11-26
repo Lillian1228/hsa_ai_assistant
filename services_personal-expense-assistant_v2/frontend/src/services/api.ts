@@ -4,7 +4,28 @@ import type {
   ChatResponse,
   ApproveRequest,
   ApproveResponse,
+  ApiImageData,
 } from '@/types';
+
+/**
+ * Helper function to encode file to base64
+ */
+const encodeFileToBase64 = (file: File): Promise<ApiImageData> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64Data = result.split(',')[1];
+      resolve({
+        serialized_image: base64Data,
+        mime_type: file.type,
+      });
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
 
 /**
  * API client configuration
@@ -128,7 +149,7 @@ const requestWithRetry = async <T>(
 export const apiService = {
   /**
   * Send chat message or upload receipt
-   * Use FormData format to send files
+   * Use JSON format to send data, including base64 encoded files
    */
   sendMessage: async (data: {
     text: string;
@@ -137,26 +158,22 @@ export const apiService = {
     user_id: string;
   }): Promise<ChatResponse> => {
     try {
-      const formData = new FormData();
-      formData.append('text', data.text);
-      formData.append('session_id', data.session_id);
-      formData.append('user_id', data.user_id);
-      
-      // Add files (if any)
-      if (data.files && data.files.length > 0) {
-        data.files.forEach((file) => {
-          formData.append('files', file);
-        });
-      }
+      // Encode files to base64
+      const encodedFiles = data.files && data.files.length > 0
+        ? await Promise.all(data.files.map(file => encodeFileToBase64(file)))
+        : [];
+
+      const requestData: ChatRequest = {
+        text: data.text,
+        files: encodedFiles,
+        session_id: data.session_id,
+        user_id: data.user_id,
+      };
   
       const url = '/chat';
   
       const response = await requestWithRetry(
-        () => apiClient.post<ChatResponse>(url, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }),
+        () => apiClient.post<ChatResponse>(url, requestData),
         2 // Maximum 2 retries
       );
       return response.data;

@@ -49,9 +49,10 @@ export const useChat = (sessionId: string, userId: string) => {
       if (response.review_request) {
         // Convert ReceiptReviewRequest to ReceiptData format
         const receiptData = {
+          receipt_id: response.review_request.receipt_id,
           store_name: response.review_request.store_name,
           date: new Date(response.review_request.date),
-          eligible_items: response.review_request.eligible_items.map((item, index) => ({
+          eligible_items: (response.review_request.hsa_eligible_items || []).map((item, index) => ({
             id: `eligible-${index}`,
             name: item.name,
             price: item.price,
@@ -59,7 +60,7 @@ export const useChat = (sessionId: string, userId: string) => {
             description: item.description,
             is_eligible: true,
           })),
-          non_eligible_items: response.review_request.non_eligible_items.map((item, index) => ({
+          non_eligible_items: (response.review_request.non_hsa_eligible_items || []).map((item, index) => ({
             id: `non-eligible-${index}`,
             name: item.name,
             price: item.price,
@@ -67,7 +68,7 @@ export const useChat = (sessionId: string, userId: string) => {
             description: item.description,
             is_eligible: false,
           })),
-          unsure_items: response.review_request.unsure_items.map((item, index) => ({
+          unsure_items: (response.review_request.unsure_hsa_items || []).map((item, index) => ({
             id: `unsure-${index}`,
             name: item.name,
             price: item.price,
@@ -78,6 +79,7 @@ export const useChat = (sessionId: string, userId: string) => {
           payment_card: response.review_request.payment_card,
           card_last_four_digit: response.review_request.card_last_four_digit,
           total_cost: response.review_request.total_cost,
+          total_hsa_cost: (response.review_request.hsa_eligible_items || []).reduce((sum, item) => sum + item.price, 0),
           image_url: response.image_url,
         };
         
