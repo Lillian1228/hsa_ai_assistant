@@ -64,6 +64,12 @@ export interface ReceiptResponse {
 // If receipt_review_request is present, navigate to review page
 export type ChatResponse = ReceiptResponse;
 
+/**
+ * ChatTextResponse - Simple text response
+ * Alias for ChatResponse for compatibility
+ */
+export type ChatTextResponse = ChatResponse;
+
 // ============ Approve API ============
 
 /**
@@ -73,9 +79,9 @@ export type ChatResponse = ReceiptResponse;
 export interface ApproveRequest {
   store_name: string;
   date: string; // ISO 8601 string format
-  eligible_items: ReceiptItem[];
-  non_eligible_items: ReceiptItem[];
-  unsure_items: ReceiptItem[];
+  approved_eligible_items: ReceiptItem[];
+  approved_non_eligible_items: ReceiptItem[];
+  approved_unsure_items: ReceiptItem[];
   payment_card: string;
   card_last_four_digit: string;
   total_cost: number;

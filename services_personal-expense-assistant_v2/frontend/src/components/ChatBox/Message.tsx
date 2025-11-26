@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, Space } from 'antd';
+import { Avatar } from 'antd';
 import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { Message as MessageType } from '@/types';

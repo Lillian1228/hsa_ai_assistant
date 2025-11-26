@@ -23,11 +23,6 @@ export const router = createBrowserRouter(
       path: '/test',
       element: <TestPage />,
     },
-  ],
-  {
-    future: {
-      v7_startTransition: true,
-    },
-  }
+  ]
 );
 

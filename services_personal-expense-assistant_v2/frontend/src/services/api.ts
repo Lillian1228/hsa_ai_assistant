@@ -149,9 +149,7 @@ export const apiService = {
         });
       }
   
-        // Add query parameter for Postman Mock matching
-      const hasFiles = data.files && data.files.length > 0;
-      const url = `/chat?has_file=${hasFiles}`;
+      const url = '/chat';
   
       const response = await requestWithRetry(
         () => apiClient.post<ChatResponse>(url, formData, {
@@ -176,7 +174,7 @@ export const apiService = {
   ): Promise<ApproveResponse> => {
     try {
       const response = await requestWithRetry(
-        () => apiClient.post<ApproveResponse>('/approve', request),
+        () => apiClient.post<ApproveResponse>('/review', request),
         2
       );
       return response.data;

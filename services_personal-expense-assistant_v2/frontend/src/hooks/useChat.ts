@@ -1,6 +1,8 @@
 import { useChatStore } from '@/store/useChatStore';
 import { apiService } from '@/services/api';
 import { message as antdMessage } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { useReceiptStore } from '@/store/useReceiptStore';
 import type { Message } from '@/types';
 
 /**
@@ -8,6 +10,8 @@ import type { Message } from '@/types';
  */
 export const useChat = (sessionId: string, userId: string) => {
   const { messages, addMessage, setLoading, isLoading } = useChatStore();
+  const navigate = useNavigate();
+  const { setCurrentReceipt } = useReceiptStore();
 
   const sendMessage = async (text: string) => {
     setLoading(true);
@@ -41,8 +45,45 @@ export const useChat = (sessionId: string, userId: string) => {
         addMessage(assistantMessage);
       }
 
-      // Note: If receipt_review_request is present, the caller (e.g., ReceiptUploader) 
-      // will handle navigation to review page
+      // Check if response contains receipt review request
+      if (response.receipt_review_request) {
+        // Convert ReceiptReviewRequest to ReceiptData format
+        const receiptData = {
+          store_name: response.receipt_review_request.store_name,
+          date: new Date(response.receipt_review_request.date),
+          eligible_items: response.receipt_review_request.eligible_items.map((item, index) => ({
+            id: `eligible-${index}`,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            description: item.description,
+            is_eligible: true,
+          })),
+          non_eligible_items: response.receipt_review_request.non_eligible_items.map((item, index) => ({
+            id: `non-eligible-${index}`,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            description: item.description,
+            is_eligible: false,
+          })),
+          unsure_items: response.receipt_review_request.unsure_items.map((item, index) => ({
+            id: `unsure-${index}`,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            description: item.description,
+            is_eligible: false,
+          })),
+          payment_card: response.receipt_review_request.payment_card,
+          card_last_four_digit: response.receipt_review_request.card_last_four_digit,
+          total_cost: response.receipt_review_request.total_cost,
+          image_url: response.image_url,
+        };
+        
+        setCurrentReceipt(receiptData);
+        navigate('/review');
+      }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Send failed');
       

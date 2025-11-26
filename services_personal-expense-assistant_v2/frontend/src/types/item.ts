@@ -24,7 +24,6 @@ export interface ItemFull {
   description: string; // Item description
   purchase_date: string; // Purchase date (ISO 8601 format)
   image_url: string; // Path to receipt image in cloud storage
-  is_eligible: boolean; // Whether eligible for HSA
 }
 
 /**

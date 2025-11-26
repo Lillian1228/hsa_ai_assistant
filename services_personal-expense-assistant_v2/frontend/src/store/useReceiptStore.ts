@@ -88,7 +88,6 @@ const testAllItems: ItemFull[] = [
     description: 'Pain reliever and fever reducer',
     purchase_date: '2024-11-20T00:00:00.000Z',
     image_url: 'https://example.com/receipts/cvs_20241120.jpg',
-    is_eligible: true,
   },
   {
     item_name: 'Band-Aid Bandages',
@@ -98,7 +97,6 @@ const testAllItems: ItemFull[] = [
     description: 'Adhesive bandages for wound care',
     purchase_date: '2024-11-20T00:00:00.000Z',
     image_url: 'https://example.com/receipts/cvs_20241120.jpg',
-    is_eligible: true,
   },
   {
     item_name: 'Multivitamins',
@@ -108,27 +106,6 @@ const testAllItems: ItemFull[] = [
     description: 'Daily multivitamin supplement',
     purchase_date: '2024-11-20T00:00:00.000Z',
     image_url: 'https://example.com/receipts/cvs_20241120.jpg',
-    is_eligible: true,
-  },
-  {
-    item_name: 'Candy Bar',
-    store_name: 'CVS Pharmacy',
-    quantity: 3,
-    price: 3.99,
-    description: 'Chocolate candy bar',
-    purchase_date: '2024-11-20T00:00:00.000Z',
-    image_url: 'https://example.com/receipts/cvs_20241120.jpg',
-    is_eligible: false,
-  },
-  {
-    item_name: 'Soda 12-pack',
-    store_name: 'CVS Pharmacy',
-    quantity: 1,
-    price: 6.99,
-    description: 'Carbonated soft drink',
-    purchase_date: '2024-11-20T00:00:00.000Z',
-    image_url: 'https://example.com/receipts/cvs_20241120.jpg',
-    is_eligible: false,
   },
   {
     item_name: 'First Aid Kit',
@@ -138,7 +115,6 @@ const testAllItems: ItemFull[] = [
     description: 'Complete first aid kit',
     purchase_date: '2024-11-15T00:00:00.000Z',
     image_url: 'https://example.com/receipts/walgreens_20241115.jpg',
-    is_eligible: true,
   },
   {
     item_name: 'Thermometer',
@@ -148,17 +124,6 @@ const testAllItems: ItemFull[] = [
     description: 'Digital thermometer',
     purchase_date: '2024-11-15T00:00:00.000Z',
     image_url: 'https://example.com/receipts/walgreens_20241115.jpg',
-    is_eligible: true,
-  },
-  {
-    item_name: 'Chips',
-    store_name: 'Walgreens',
-    quantity: 2,
-    price: 2.99,
-    description: 'Potato chips',
-    purchase_date: '2024-11-15T00:00:00.000Z',
-    image_url: 'https://example.com/receipts/walgreens_20241115.jpg',
-    is_eligible: false,
   },
   {
     item_name: 'Pain Relief Cream',
@@ -168,7 +133,6 @@ const testAllItems: ItemFull[] = [
     description: 'Topical pain relief',
     purchase_date: '2024-11-10T00:00:00.000Z',
     image_url: 'https://example.com/receipts/target_20241110.jpg',
-    is_eligible: true,
   },
   {
     item_name: 'Allergy Medicine',
@@ -178,7 +142,6 @@ const testAllItems: ItemFull[] = [
     description: 'Antihistamine tablets',
     purchase_date: '2024-11-10T00:00:00.000Z',
     image_url: 'https://example.com/receipts/target_20241110.jpg',
-    is_eligible: true,
   },
 ];
 

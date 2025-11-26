@@ -14,7 +14,7 @@ import {
 import type { Item } from '@/types';
 import './ItemCard.css';
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 const { confirm } = Modal;
 const { TextArea } = Input;
 

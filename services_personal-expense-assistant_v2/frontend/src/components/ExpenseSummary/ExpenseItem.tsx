@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import { Card, Typography, Space, Collapse, Tag, Divider } from 'antd';
+import React from 'react';
+import { Card, Typography, Space, Collapse, Divider } from 'antd';
 import {
   ShopOutlined,
   CalendarOutlined,
-  DollarOutlined,
   CreditCardOutlined,
-  DownOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';

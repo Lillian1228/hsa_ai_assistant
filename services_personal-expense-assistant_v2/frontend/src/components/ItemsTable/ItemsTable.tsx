@@ -16,7 +16,6 @@ interface ItemsTableProps {
 interface FilterState {
   searchText: string;
   storeName: string | null;
-  showEligibleOnly: boolean;
   dateRange: [Dayjs, Dayjs] | null;
 }
 
@@ -29,7 +28,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
   const [filters, setFilters] = useState<FilterState>({
     searchText: '',
     storeName: null,
-    showEligibleOnly: true, // Default: show only eligible items
     dateRange: null,
   });
 
@@ -46,11 +44,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
   // Filter and sort data
   const processedData = useMemo(() => {
     let result = [...items];
-
-    // Filter: Eligibility
-    if (filters.showEligibleOnly) {
-      result = result.filter(item => item.is_eligible);
-    }
 
     // Filter: Store
     if (filters.storeName) {
@@ -102,11 +95,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
 
   // Calculate statistics
   const statistics = useMemo(() => {
-    const eligibleItems = processedData.filter(item => item.is_eligible);
-    const totalCost = eligibleItems.reduce((sum, item) => sum + (item.price || 0), 0);
+    const totalCost = processedData.reduce((sum, item) => sum + (item.price || 0), 0);
     return {
       total: processedData.length,
-      eligible: eligibleItems.length,
       totalCost,
     };
   }, [processedData]);
@@ -116,7 +107,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
     setFilters({
       searchText: '',
       storeName: null,
-      showEligibleOnly: true,
       dateRange: null,
     });
   };
@@ -177,18 +167,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
       render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD') : '-',
     },
     {
-      title: 'Eligibility',
-      dataIndex: 'is_eligible',
-      key: 'is_eligible',
-      width: 100,
-      align: 'center',
-      render: (eligible: boolean) => (
-        <Tag color={eligible ? 'green' : 'red'}>
-          {eligible ? 'Eligible' : 'Not Eligible'}
-        </Tag>
-      ),
-    },
-    {
       title: 'Receipt',
       dataIndex: 'image_url',
       key: 'image_url',
@@ -232,17 +210,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
               {storeNames.map(name => (
                 <Option key={name} value={name}>{name}</Option>
               ))}
-            </Select>
-
-            <Select
-              value={filters.showEligibleOnly ? 'eligible' : 'all'}
-              onChange={(value) =>
-                setFilters({ ...filters, showEligibleOnly: value === 'eligible' })
-              }
-              style={{ width: 150 }}
-            >
-              <Option value="eligible">Eligible Only</Option>
-              <Option value="all">All Items</Option>
             </Select>
 
             <RangePicker
@@ -289,18 +256,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
               <span>
                 Showing <strong>{processedData.length}</strong> items
               </span>
-              {filters.showEligibleOnly && (
-                <>
-                  <span className="divider">|</span>
-                  <span>
-                    Eligible items: <strong style={{ color: '#52c41a' }}>{statistics.eligible}</strong>
-                  </span>
-                  <span className="divider">|</span>
-                  <span>
-                    Eligible total: <strong style={{ color: '#52c41a' }}>${statistics.totalCost.toFixed(2)}</strong>
-                  </span>
-                </>
-              )}
+              <span className="divider">|</span>
+              <span>
+                Total Cost: <strong style={{ color: '#52c41a' }}>${statistics.totalCost.toFixed(2)}</strong>
+              </span>
             </Space>
           </div>
         </Space>
