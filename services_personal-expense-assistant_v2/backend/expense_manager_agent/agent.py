@@ -1,0 +1,63 @@
+# expense_manager_agent/agent.py
+
+from google.adk.agents import Agent
+from expense_manager_agent.tools import (
+    # store_receipt_data,  # Removed: Should never be called by agent - only by backend after review
+    search_receipts_by_metadata_filter,
+    search_relevant_receipts_by_natural_language_query,
+    get_receipt_data_by_image_id,
+    request_receipt_review,
+)
+from google.adk.tools import google_search, AgentTool
+from expense_manager_agent.callbacks import modify_image_data_in_history
+import os
+from settings import get_settings
+from google.adk.planners import BuiltInPlanner
+from google.genai import types
+
+SETTINGS = get_settings()
+os.environ["GOOGLE_CLOUD_PROJECT"] = SETTINGS.GCLOUD_PROJECT_ID
+os.environ["GOOGLE_CLOUD_LOCATION"] = SETTINGS.GCLOUD_LOCATION
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "TRUE"
+
+# Get the code file directory path and read the task prompt file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+prompt_path = os.path.join(current_dir, "task_prompt.md")
+with open(prompt_path, "r") as file:
+    task_prompt = file.read()
+
+web_search_agent = Agent(
+    name="web_search_agent",
+    model="gemini-2.5-flash",
+    instruction="""You are a specialized web search agent. Your only job is to use the
+    google_search tool to find 2-3 pieces of relevant information on the given question and present the findings with citations.""",
+    tools=[
+        google_search,
+    ],
+    output_key="search_results",
+)
+
+
+root_agent = Agent(
+    name="expense_manager_agent",
+    model="gemini-2.5-flash",
+    description=(
+        "Personal expense agent to help user track expenses, analyze receipts, and manage their financial records"
+    ),
+    instruction=task_prompt,
+    tools=[
+        request_receipt_review,  # MANDATORY: Must be called for all receipt storage
+        # store_receipt_data removed - can only be called by backend after human review approval
+        get_receipt_data_by_image_id,
+        search_receipts_by_metadata_filter,
+        search_relevant_receipts_by_natural_language_query,
+        AgentTool(web_search_agent),
+        # google_search,
+    ],
+    planner=BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(
+            thinking_budget=2048,
+        )
+    ),
+    before_model_callback=modify_image_data_in_history,
+)
