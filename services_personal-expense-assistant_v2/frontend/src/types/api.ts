@@ -1,15 +1,23 @@
 import { ItemFull } from './item';
-import { ImageData } from './receipt';
 
 /**
  * API request and response type definitions
  */
 
+/**
+ * Image data structure for API requests
+ * Used when sending base64 encoded images to backend
+ */
+export interface ApiImageData {
+  serialized_image: string;
+  mime_type: string;
+}
+
 // ============ Chat API ============
 
 export interface ChatRequest {
   text: string;
-  files: ImageData[];
+  files: ApiImageData[];
   session_id: string;
   user_id: string;
 }
@@ -30,12 +38,13 @@ export interface ReceiptItem {
 export interface ReceiptReviewRequest {
   store_name: string;
   date: string;
-  eligible_items: ReceiptItem[];
-  non_eligible_items: ReceiptItem[];
-  unsure_items: ReceiptItem[]; // Note: Backend schema shows object, but should be array
+  hsa_eligible_items: ReceiptItem[];
+  non_hsa_eligible_items: ReceiptItem[];
+  unsure_hsa_items: ReceiptItem[]; // Note: Backend schema shows object, but should be array
   payment_card: string;
   card_last_four_digit: string;
   total_cost: number;
+  receipt_id: string;
 }
 
 /**
@@ -77,11 +86,12 @@ export type ChatTextResponse = ChatResponse;
  * Same structure as ReceiptReviewRequest, items without id and is_eligible
  */
 export interface ApproveRequest {
+  receipt_id: string;
   store_name: string;
   date: string; // ISO 8601 string format
-  approved_eligible_items: ReceiptItem[];
-  approved_non_eligible_items: ReceiptItem[];
-  approved_unsure_items: ReceiptItem[];
+  approved_hsa_eligible_items: ReceiptItem[];
+  approved_non_hsa_eligible_items: ReceiptItem[];
+  approved_unsure_hsa_items: ReceiptItem[];
   payment_card: string;
   card_last_four_digit: string;
   total_cost: number;

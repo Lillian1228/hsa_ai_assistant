@@ -31,7 +31,7 @@ COPY frontend/ ./
 
 # Create production .env file with backend API URL
 # Note: Update VITE_API_BASE_URL to your Cloud Run backend URL after deployment
-RUN echo "VITE_API_BASE_URL=http://localhost:8081" > .env
+RUN echo "VITE_API_BASE_URL=https://personal-expense-assistant-43823015060.us-central1.run.app" > .env
 
 # Build frontend for production
 RUN npm run build
@@ -51,7 +51,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy backend code from services_personal-expense-assistant_v2/
-COPY services_personal-expense-assistant_v2/ /app/
+COPY backend/ /app/
 
 # Install Python dependencies
 RUN uv sync --frozen
