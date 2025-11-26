@@ -20,7 +20,7 @@ interface FilterState {
 }
 
 interface SortState {
-  field: 'purchase_date' | 'price' | 'store_name' | 'item_name';
+  field: 'date' | 'price' | 'store_name' | 'name';
   order: 'asc' | 'desc';
 }
 
@@ -32,7 +32,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
   });
 
   const [sort, setSort] = useState<SortState>({
-    field: 'purchase_date',
+    field: 'date',
     order: 'desc', // Default: sort by date descending
   });
 
@@ -55,7 +55,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
       const searchLower = filters.searchText.toLowerCase();
       result = result.filter(
         item =>
-          (item.item_name && item.item_name.toLowerCase().includes(searchLower)) ||
+          (item.name && item.name.toLowerCase().includes(searchLower)) ||
           (item.description && item.description.toLowerCase().includes(searchLower))
       );
     }
@@ -64,8 +64,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
     if (filters.dateRange) {
       const [start, end] = filters.dateRange;
       result = result.filter(item => {
-        if (!item.purchase_date) return false;
-        const itemDate = dayjs(item.purchase_date);
+        if (!item.date) return false;
+        const itemDate = dayjs(item.date);
         return itemDate.isAfter(start) && itemDate.isBefore(end.add(1, 'day'));
       });
     }
@@ -74,8 +74,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
     result.sort((a, b) => {
       let comparison = 0;
       switch (sort.field) {
-        case 'purchase_date':
-          comparison = dayjs(a.purchase_date || 0).valueOf() - dayjs(b.purchase_date || 0).valueOf();
+        case 'date':
+          comparison = dayjs(a.date || 0).valueOf() - dayjs(b.date || 0).valueOf();
           break;
         case 'price':
           comparison = (a.price || 0) - (b.price || 0);
@@ -83,8 +83,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
         case 'store_name':
           comparison = (a.store_name || '').localeCompare(b.store_name || '');
           break;
-        case 'item_name':
-          comparison = (a.item_name || '').localeCompare(b.item_name || '');
+        case 'name':
+          comparison = (a.name || '').localeCompare(b.name || '');
           break;
       }
       return sort.order === 'asc' ? comparison : -comparison;
@@ -115,8 +115,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
   const columns: ColumnsType<ItemFull> = [
     {
       title: 'Item Name',
-      dataIndex: 'item_name',
-      key: 'item_name',
+      dataIndex: 'name',
+      key: 'name',
       width: 200,
       fixed: 'left',
       ellipsis: true,
@@ -160,8 +160,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
     },
     {
       title: 'Date',
-      dataIndex: 'purchase_date',
-      key: 'purchase_date',
+      dataIndex: 'date',
+      key: 'date',
       width: 110,
       align: 'center',
       render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD') : '-',
@@ -227,10 +227,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
               onChange={(value) => setSort({ ...sort, field: value })}
               style={{ width: 140 }}
             >
-              <Option value="purchase_date">Purchase Date</Option>
+              <Option value="date">Purchase Date</Option>
               <Option value="price">Price</Option>
               <Option value="store_name">Store</Option>
-              <Option value="item_name">Item Name</Option>
+              <Option value="name">Item Name</Option>
             </Select>
 
             <Select
@@ -269,7 +269,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
       <Table
         columns={columns}
         dataSource={processedData}
-        rowKey={(record, index) => `${record.item_name}-${record.purchase_date}-${index}`}
+        rowKey={(record, index) => `${record.name}-${record.date}-${index}`}
         pagination={{
           pageSize: 20,
           showSizeChanger: true,
