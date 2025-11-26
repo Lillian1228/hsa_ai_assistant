@@ -6,6 +6,8 @@ import type { UploadProps, UploadFile } from 'antd';
 import { useReceiptUpload } from '@/hooks/useReceiptUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { useReceiptStore } from '@/store/useReceiptStore';
+import { useChatStore } from '@/store/useChatStore';
+import type { Message } from '@/types';
 import './ReceiptUploader.css';
 
 const { Dragger } = Upload;
@@ -34,6 +36,7 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
   const { uploadReceipt, isUploading } = useReceiptUpload();
   const { sessionId, userId } = useAppStore();
   const { setCurrentReceipt } = useReceiptStore();
+  const { addMessage } = useChatStore();
 
   // Get image preview URL
   const getBase64 = (file: File): Promise<string> =>
@@ -123,7 +126,17 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
 
       console.log('Upload response:', response);
 
-      // Always display response.response in chatbox (handled by API layer)
+      // Display response in chatbox if present
+      if (response && response.response) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: response.response,
+          timestamp: new Date(),
+        };
+        addMessage(assistantMessage);
+      }
+
       // Check if response contains receipt review request
       if (response && response.receipt_review_request) {
         message.success('Receipt uploaded successfully!');
@@ -170,9 +183,6 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
         
         // Redirect to review page
         navigate('/review');
-      } else {
-        // No receipt data, just a chat response (response.response will be shown in chatbox)
-        message.info('Message sent successfully');
       }
     } catch (error) {
       console.error('Upload error:', error);

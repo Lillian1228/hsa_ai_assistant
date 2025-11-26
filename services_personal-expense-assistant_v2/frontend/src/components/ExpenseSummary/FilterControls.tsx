@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, Input, Select, DatePicker, Space, Row, Col } from 'antd';
-import { SearchOutlined, SortAscendingOutlined } from '@ant-design/icons';
+import { Card, Input, Select, DatePicker, Row, Col } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './FilterControls.css';
 

@@ -179,11 +179,22 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
       // Use setAllItems instead of addItems to replace old data instead of accumulating it
       console.log('✅ Approve response received:', response);
       console.log('✅ Items count:', response.items?.length);
-      console.log('✅ Items data:', response.items);
       
+      // Ensure we only save items that are eligible, even if backend returns everything.
+      // Since ItemFull no longer has is_eligible property in the type definition, we cast to any to check the runtime value.
       if (response.items && response.items.length > 0) {
-        setAllItems(response.items);
-        console.log('✅ Items saved to store');
+        // Filter items that are eligible (assuming backend might still send is_eligible field)
+        // If backend doesn't send is_eligible, we assume all items in this list are what we want (which are eligible ones)
+        // But to be safe and follow the requirement "only show eligible", we try to filter if possible.
+        const eligibleItems = response.items.filter((item: any) => {
+          // If is_eligible is present, check it. If not present, assume true (or false? better assume true if we changed backend contract)
+          // However, the user requirement is to not show non-eligible.
+          // If the backend still returns mixed list with is_eligible flag, we must filter.
+          return item.is_eligible !== false; 
+        });
+
+        setAllItems(eligibleItems);
+        console.log('✅ Items saved to store (filtered count):', eligibleItems.length);
       } else {
         console.warn('⚠️ No items in response or items array is empty');
       }
