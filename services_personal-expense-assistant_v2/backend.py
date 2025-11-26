@@ -3,6 +3,7 @@ from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.events import Event
 from fastapi import FastAPI, Body, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from typing import AsyncIterator, Dict
 from types import SimpleNamespace
 import uvicorn
@@ -195,6 +196,22 @@ def extract_review_request_from_response(response_text: str) -> tuple[str, Recei
 
 # Create FastAPI app
 app = FastAPI(title="Personal Expense Assistant API", lifespan=lifespan)
+
+# Configure CORS middleware to allow requests from frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # Vite dev server default port
+        "http://localhost:3000",  # Alternative React dev port
+        "http://localhost:8080",  # Gradio frontend
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 @app.post("/chat", response_model=ChatResponse)
