@@ -7,6 +7,7 @@ import { useReceiptUpload } from '@/hooks/useReceiptUpload';
 import { useAppStore } from '@/store/useAppStore';
 import { useReceiptStore } from '@/store/useReceiptStore';
 import { useChatStore } from '@/store/useChatStore';
+import { parseLocalDate } from '@/utils/format';
 import type { Message } from '@/types';
 import './ReceiptUploader.css';
 
@@ -141,11 +142,18 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
       if (response && response.review_request) {
         message.success('Receipt uploaded successfully!');
         
+        // Process receipt image from attachments
+        let receiptImage: string | undefined;
+        if (response.attachments && response.attachments.length > 0) {
+          const attachment = response.attachments[0]; // Use first attachment
+          receiptImage = `data:${attachment.mime_type};base64,${attachment.serialized_image}`;
+        }
+
         // Convert ReceiptReviewRequest to ReceiptData format
         const receiptData = {
           receipt_id: response.review_request.receipt_id,
           store_name: response.review_request.store_name,
-          date: new Date(response.review_request.date),
+          date: parseLocalDate(response.review_request.date),
           eligible_items: (response.review_request.hsa_eligible_items || []).map((item, index) => ({
             id: `eligible-${index}`,
             name: item.name,
@@ -174,7 +182,8 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
           card_last_four_digit: response.review_request.card_last_four_digit,
           total_cost: response.review_request.total_cost,
           total_hsa_cost: (response.review_request.hsa_eligible_items || []).reduce((sum, item) => sum + item.price, 0),
-          image_url: response.image_url, // Store receipt image URL
+          image_url: response.image_url, // Store receipt image URL (if available)
+          receipt_image: receiptImage, // Store base64 image from attachments
         };
         
         // Store receipt data to Store

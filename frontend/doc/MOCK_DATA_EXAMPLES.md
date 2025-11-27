@@ -84,10 +84,22 @@ This document provides complete API request and response examples for Apifox Moc
   },
   "response": "I've analyzed your receipt from CVS Pharmacy. Found 3 eligible items, 2 non-eligible items, and 1 item that needs your review.",
   "thinking_process": "Analyzing receipt image... Extracting text... Categorizing items...",
-  "attachments": [],
+  "attachments": [
+    {
+      "serialized_image": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "mime_type": "image/png"
+    }
+  ],
   "error": "",
   "image_url": "https://example.com/receipts/cvs_20241122_abc123.jpg"
 }
+```
+
+**Note**: 
+- `attachments[0].serialized_image` contains the base64-encoded receipt image
+- Frontend will convert it to data URL: `data:image/png;base64,{serialized_image}`
+- The example above is a 1x1 pixel placeholder. In production, this will be the actual receipt image
+- `image_url` is optional and can be used as fallback if attachments are not available
 ```
 
 **Note**: Items in `eligible_items`, `non_eligible_items`, and `unsure_items` do NOT have `id` or `is_eligible` fields. The frontend generates `id` values and sets `is_eligible` based on which list the item is in.

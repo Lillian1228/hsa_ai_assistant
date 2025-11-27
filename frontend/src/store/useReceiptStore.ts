@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { parseLocalDate } from '@/utils/format';
 import type { ReceiptData, ItemFull } from '@/types';
 
 /**
@@ -22,8 +23,9 @@ interface ReceiptState {
 
 // Test data (used for development testing)
 const testReceipt: ReceiptData = {
+  receipt_id: 'test-receipt-001',
   store_name: 'CVS Pharmacy',
-  date: new Date('2024-11-20'),
+  date: parseLocalDate('2024-11-20'),
   eligible_items: [
     { id: '1', name: 'Ibuprofen 200mg', price: 12.99, quantity: 1, description: 'Pain reliever and fever reducer', is_eligible: true },
     { id: '2', name: 'Band-Aid Bandages', price: 5.49, quantity: 2, description: 'Adhesive bandages for wound care', is_eligible: true },
@@ -39,18 +41,21 @@ const testReceipt: ReceiptData = {
   payment_card: 'Visa',
   card_last_four_digit: '1234',
   total_cost: 43.47,
-  image_url: 'https://example.com/receipts/cvs_20241120_test.jpg', // Receipt image URL
+  total_hsa_cost: 43.47,
+  image_url: 'https://via.placeholder.com/600x800.png?text=CVS+Receipt', // Receipt image URL
+  // receipt_image can be set from attachments when available
 };
 
 // Test approved records (used for development testing)
 const testApprovedReceipts: ReceiptData[] = [
   {
     ...testReceipt,
-    date: new Date('2024-11-20'),
+    date: parseLocalDate('2024-11-20'),
   },
   {
+    receipt_id: 'test-receipt-002',
     store_name: 'Walgreens',
-    date: new Date('2024-11-15'),
+    date: parseLocalDate('2024-11-15'),
     eligible_items: [
       { id: '6', name: 'First Aid Kit', price: 19.99, quantity: 1, description: 'Complete first aid kit', is_eligible: true },
       { id: '7', name: 'Thermometer', price: 15.49, quantity: 1, description: 'Digital thermometer', is_eligible: true },
@@ -64,8 +69,9 @@ const testApprovedReceipts: ReceiptData[] = [
     total_cost: 35.48,
   },
   {
+    receipt_id: 'test-receipt-003',
     store_name: 'Target Pharmacy',
-    date: new Date('2024-11-10'),
+    date: parseLocalDate('2024-11-10'),
     eligible_items: [
       { id: '9', name: 'Pain Relief Cream', price: 8.99, quantity: 1, description: 'Topical pain relief', is_eligible: true },
       { id: '10', name: 'Allergy Medicine', price: 12.49, quantity: 1, description: 'Antihistamine tablets', is_eligible: true },

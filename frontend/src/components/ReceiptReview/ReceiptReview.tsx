@@ -240,12 +240,12 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
       {/* Main Content: Left-Right Layout */}
       <div className="review-content-layout">
         {/* Left: Receipt Image (if available) */}
-        {editedData.image_url && (
+        {(editedData.receipt_image || editedData.image_url) && (
           <div className="receipt-image-section">
             <Card className="receipt-image-card" title="📷 Receipt Image">
               <div className="receipt-image-container">
                 <img 
-                  src={editedData.image_url} 
+                  src={editedData.receipt_image || editedData.image_url} 
                   alt="Receipt" 
                   className="receipt-image"
                 />
@@ -255,7 +255,7 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
         )}
 
         {/* Right: Receipt Information */}
-        <div className={`receipt-info-section ${editedData.image_url ? 'with-image' : 'full-width'}`}>
+        <div className={`receipt-info-section ${(editedData.receipt_image || editedData.image_url) ? 'with-image' : 'full-width'}`}>
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             {/* Total Amount - Moved to top, compact single line */}
             <Card className="total-card-compact">
