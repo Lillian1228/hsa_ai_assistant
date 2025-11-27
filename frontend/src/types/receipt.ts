@@ -16,7 +16,8 @@ export interface ReceiptData {
   card_last_four_digit: string;
   total_cost: number; // Changed from total_hsa_cost
   total_hsa_cost: number; // HSA eligible total cost
-  image_url?: string; // Receipt image URL (from backend)
+  image_url?: string; // Receipt image URL (from backend, if available)
+  receipt_image?: string; // Base64 data URL from attachments (data:image/jpeg;base64,...)
 }
 
 /**
