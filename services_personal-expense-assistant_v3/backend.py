@@ -2,7 +2,7 @@ from expense_manager_agent.agent import root_agent as expense_manager_agent
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.adk.events import Event
-from fastapi import FastAPI, Body, Depends
+from fastapi import FastAPI, Body, Depends, Request
 from typing import AsyncIterator, Dict
 from types import SimpleNamespace
 import uvicorn
@@ -22,6 +22,8 @@ from database import Database
 import json
 import re
 from fastapi.middleware.cors import CORSMiddleware
+import time
+from starlette.middleware.base import BaseHTTPMiddleware
 
 SETTINGS = get_settings()
 APP_NAME = "expense_manager_app"
@@ -194,8 +196,74 @@ def extract_review_request_from_response(response_text: str) -> tuple[str, Recei
     return sanitized_text, review_request
 
 
+# Request logging middleware
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        
+        # Log incoming request
+        request_body = None
+        try:
+            if request.method in ["POST", "PUT", "PATCH"]:
+                body = await request.body()
+                if body:
+                    request_body = body.decode('utf-8')[:1000]  # Log first 1000 chars
+                    # Re-create request body for endpoint processing
+                    async def receive():
+                        return {"type": "http.request", "body": body}
+                    request._receive = receive
+        except Exception as e:
+            logger.warning(f"Could not read request body: {e}")
+        
+        # Extract request details
+        client_host = request.client.host if request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown")
+        
+        logger.info(
+            "Incoming request",
+            method=request.method,
+            path=request.url.path,
+            query_params=str(request.query_params) if request.query_params else None,
+            client_host=client_host,
+            user_agent=user_agent,
+            request_body_preview=request_body,
+        )
+        
+        # Process request
+        try:
+            response = await call_next(request)
+            
+            # Calculate processing time
+            process_time = time.time() - start_time
+            
+            # Log response
+            logger.info(
+                "Request completed",
+                method=request.method,
+                path=request.url.path,
+                status_code=response.status_code,
+                process_time_seconds=round(process_time, 3),
+            )
+            
+            return response
+        except Exception as e:
+            process_time = time.time() - start_time
+            logger.error(
+                "Request failed",
+                method=request.method,
+                path=request.url.path,
+                error_message=str(e),
+                process_time_seconds=round(process_time, 3),
+                exc_info=True,
+            )
+            raise
+
+
 # Create FastAPI app
 app = FastAPI(title="Personal Expense Assistant API", lifespan=lifespan)
+
+# Add request logging middleware (before CORS to log all requests)
+app.add_middleware(RequestLoggingMiddleware)
 
 # Add CORS - replace with your frontend URL
 app.add_middleware(
@@ -219,11 +287,29 @@ async def chat(
     session_id = request.session_id
     user_id = request.user_id
     
+    logger.info(
+        "Chat request received",
+        endpoint="/chat",
+        user_id=user_id,
+        session_id=session_id,
+        text_length=len(request.text) if request.text else 0,
+        files_count=len(request.files) if request.files else 0,
+        text_preview=request.text[:200] if request.text else None,
+    )
+    
     # Track image URLs for uploaded images before processing
     # Calculate hash IDs from uploaded images and store their URLs
     import base64
     import hashlib
-    for image_data in request.files:
+    
+    logger.info(
+        "Processing uploaded images",
+        images_count=len(request.files),
+        user_id=user_id,
+        session_id=session_id,
+    )
+    
+    for idx, image_data in enumerate(request.files):
         image_byte = base64.b64decode(image_data.serialized_image)
         hasher = hashlib.sha256(image_byte)
         image_hash_id = hasher.hexdigest()[:12]
@@ -236,52 +322,166 @@ async def chat(
             image_hash_id=image_hash_id,
         )
         app_context.image_urls[image_hash_id] = image_url
-        logger.info(f"Tracked image URL for {image_hash_id}: {image_url}")
+        logger.info(
+            "Image processed and URL tracked",
+            image_index=idx + 1,
+            image_hash_id=image_hash_id,
+            image_url=image_url,
+            mime_type=image_data.mime_type,
+            image_size_bytes=len(image_byte),
+        )
     
     # Prepare the user's message in ADK format and store image artifacts
+    logger.info(
+        "Formatting user request and storing artifacts",
+        user_id=user_id,
+        session_id=session_id,
+    )
     content = await format_user_request_to_adk_content_and_store_artifacts(
         request=request,
         app_name=APP_NAME,
         artifact_service=app_context.artifact_service,
     )
+    logger.info(
+        "User request formatted and artifacts stored",
+        content_parts_count=len(content.parts) if content.parts else 0,
+        user_id=user_id,
+        session_id=session_id,
+    )
 
     # Create session if it doesn't exist
-    if not await app_context.session_service.get_session(
+    logger.info(
+        "Checking session existence",
+        user_id=user_id,
+        session_id=session_id,
+    )
+    existing_session = await app_context.session_service.get_session(
         app_name=APP_NAME, user_id=user_id, session_id=session_id
-    ):
+    )
+    if not existing_session:
+        logger.info(
+            "Creating new session",
+            user_id=user_id,
+            session_id=session_id,
+        )
         await app_context.session_service.create_session(
             app_name=APP_NAME, user_id=user_id, session_id=session_id
+        )
+        logger.info(
+            "New session created",
+            user_id=user_id,
+            session_id=session_id,
+        )
+    else:
+        logger.info(
+            "Using existing session",
+            user_id=user_id,
+            session_id=session_id,
         )
 
     try:
         # Process the message with the agent
+        logger.info(
+            "Starting agent processing",
+            user_id=user_id,
+            session_id=session_id,
+        )
+        
         # Type annotation: runner.run_async returns an AsyncIterator[Event]
         events_iterator: AsyncIterator[Event] = (
             app_context.expense_manager_agent_runner.run_async(
                 user_id=user_id, session_id=session_id, new_message=content
             )
         )
+        
+        event_count = 0
         async for event in events_iterator:  # event has type Event
+            event_count += 1
+            logger.debug(
+                "Agent event received",
+                event_number=event_count,
+                is_final_response=event.is_final_response(),
+                has_content=event.content is not None,
+                has_actions=event.actions is not None,
+                user_id=user_id,
+                session_id=session_id,
+            )
+            
             # Key Concept: is_final_response() marks the concluding message for the turn
             if event.is_final_response():
+                logger.info(
+                    "Final response event received",
+                    event_number=event_count,
+                    user_id=user_id,
+                    session_id=session_id,
+                )
+                logger.info(f"Final response event details: {event.model_dump_json()}")
+                logger.info("Before extracting final response",
+                    event=event.content.parts[0].text,
+                    user_id=user_id,
+                    session_id=session_id,
+                )
                 if event.content and event.content.parts:
                     # Extract text from the first part
                     final_response_text = event.content.parts[0].text
+                    logger.info(
+                        "Extracted final response from content",
+                        response_length=len(final_response_text),
+                        user_id=user_id,
+                        session_id=session_id,
+                    )
                 elif event.actions and event.actions.escalate:
                     # Handle potential errors/escalations
                     final_response_text = f"Agent escalated: {event.error_message or 'No specific message.'}"
+                    logger.warning(
+                        "Agent escalated",
+                        error_message=event.error_message,
+                        user_id=user_id,
+                        session_id=session_id,
+                    )
                 break  # Stop processing events once the final response is found
+        
+        logger.info(
+            "Agent processing completed",
+            total_events=event_count,
+            user_id=user_id,
+            session_id=session_id,
+        )
 
         logger.info(
-            "Received final response from agent", raw_final_response=final_response_text[:500]  # Log first 500 chars
+            "Received final response from agent",
+            raw_final_response_preview=final_response_text[:500],  # Log first 500 chars
+            full_response_length=len(final_response_text),
+            user_id=user_id,
+            session_id=session_id,
         )
 
         # Extract and process any attachments and thinking process in the response
+        logger.info(
+            "Extracting attachments and thinking process",
+            user_id=user_id,
+            session_id=session_id,
+        )
         base64_attachments = []
         sanitized_text, attachment_ids = extract_attachment_ids_and_sanitize_response(
             final_response_text
         )
+        logger.info(
+            "Attachments extracted",
+            attachment_count=len(attachment_ids),
+            attachment_ids=attachment_ids,
+            user_id=user_id,
+            session_id=session_id,
+        )
+        
         sanitized_text, thinking_process = extract_thinking_process(sanitized_text)
+        logger.info(
+            "Thinking process extracted",
+            has_thinking_process=bool(thinking_process),
+            thinking_process_length=len(thinking_process) if thinking_process else 0,
+            user_id=user_id,
+            session_id=session_id,
+        )
         
         # Extract review request if present - use the original response text before sanitization
         # to ensure we capture the JSON even if it's in the thinking process or attachments section
@@ -308,7 +508,21 @@ async def chat(
             )
 
         # Download images from GCS and replace hash IDs with base64 data
-        for image_hash_id in attachment_ids:
+        logger.info(
+            "Downloading attachment images from GCS",
+            attachment_ids=attachment_ids,
+            user_id=user_id,
+            session_id=session_id,
+        )
+        for idx, image_hash_id in enumerate(attachment_ids):
+            logger.info(
+                "Downloading attachment image",
+                image_index=idx + 1,
+                total_attachments=len(attachment_ids),
+                image_hash_id=image_hash_id,
+                user_id=user_id,
+                session_id=session_id,
+            )
             # Download image data and get MIME type
             result = await download_image_from_gcs(
                 artifact_service=app_context.artifact_service,
@@ -322,13 +536,33 @@ async def chat(
                 base64_attachments.append(
                     ImageData(serialized_image=base64_data, mime_type=mime_type)
                 )
+                logger.info(
+                    "Attachment image downloaded successfully",
+                    image_index=idx + 1,
+                    image_hash_id=image_hash_id,
+                    mime_type=mime_type,
+                    base64_length=len(base64_data),
+                    user_id=user_id,
+                    session_id=session_id,
+                )
+            else:
+                logger.warning(
+                    "Failed to download attachment image",
+                    image_index=idx + 1,
+                    image_hash_id=image_hash_id,
+                    user_id=user_id,
+                    session_id=session_id,
+                )
 
         logger.info(
-            "Processed response with attachments",
-            sanitized_response=sanitized_text,
-            thinking_process=thinking_process,
+            "Chat request processing completed",
+            sanitized_response_length=len(sanitized_text),
+            thinking_process_length=len(thinking_process) if thinking_process else 0,
+            attachments_count=len(base64_attachments),
             attachment_ids=attachment_ids,
             has_review_request=review_request is not None,
+            user_id=user_id,
+            session_id=session_id,
         )
 
         return ChatResponse(
@@ -354,9 +588,28 @@ async def review(
     Process receipt review approval and store approved HSA eligible items in SQL database.
     Returns all rows from the database in JSON format.
     """
+    logger.info(
+        "Review request received",
+        endpoint="/review",
+        receipt_id=review_response.receipt_id,
+        store_name=review_response.store_name,
+        date=review_response.date,
+        total_cost=review_response.total_cost,
+        approved_hsa_eligible_count=len(review_response.approved_hsa_eligible_items),
+        approved_non_hsa_eligible_count=len(review_response.approved_non_hsa_eligible_items),
+        approved_unsure_hsa_count=len(review_response.approved_unsure_hsa_items),
+        payment_card=review_response.payment_card,
+        card_last_four_digit=review_response.card_last_four_digit,
+    )
+    
     try:
         from expense_manager_agent.tools import store_receipt_data
         import datetime as dt
+        
+        logger.info(
+            "Converting review items to dictionaries",
+            receipt_id=review_response.receipt_id,
+        )
         
         # Convert ReviewItem objects to dicts for store_receipt_data
         hsa_eligible_items = [
@@ -386,22 +639,58 @@ async def review(
             for item in review_response.approved_unsure_hsa_items
         ]
         
+        logger.info(
+            "Review items converted",
+            receipt_id=review_response.receipt_id,
+            hsa_eligible_count=len(hsa_eligible_items),
+            non_hsa_eligible_count=len(non_hsa_eligible_items),
+            unsure_hsa_count=len(unsure_hsa_items),
+        )
+        
         # Convert date to transaction_time format (ISO format) for database storage
         # If date is already in ISO format, use it; otherwise convert from YYYY-MM-DD
+        logger.info(
+            "Processing transaction date",
+            receipt_id=review_response.receipt_id,
+            original_date=review_response.date,
+        )
         transaction_time = review_response.date
         try:
             # Try to parse as ISO format first
             dt.datetime.fromisoformat(transaction_time.replace("Z", "+00:00"))
+            logger.info(
+                "Date already in ISO format",
+                receipt_id=review_response.receipt_id,
+                transaction_time=transaction_time,
+            )
         except ValueError:
             # If not ISO, try to convert from YYYY-MM-DD to ISO format
             try:
                 date_obj = dt.datetime.strptime(transaction_time, "%Y-%m-%d")
                 transaction_time = date_obj.strftime("%Y-%m-%dT00:00:00.000000Z")
+                logger.info(
+                    "Date converted to ISO format",
+                    receipt_id=review_response.receipt_id,
+                    original_date=review_response.date,
+                    converted_transaction_time=transaction_time,
+                )
             except ValueError:
                 # If parsing fails, use the date as-is and let store_receipt_data validate
+                logger.warning(
+                    "Date parsing failed, using original date",
+                    receipt_id=review_response.receipt_id,
+                    original_date=review_response.date,
+                )
                 pass
         
         # Store all items (all three categories) in Firestore
+        logger.info(
+            "Storing receipt data in Firestore",
+            receipt_id=review_response.receipt_id,
+            store_name=review_response.store_name,
+            transaction_time=transaction_time,
+            total_amount=review_response.total_cost,
+        )
         result = store_receipt_data(
             image_id=review_response.receipt_id,
             store_name=review_response.store_name,
@@ -412,9 +701,19 @@ async def review(
             non_hsa_eligible_items=non_hsa_eligible_items,
             unsure_hsa_items=unsure_hsa_items,
         )
+        logger.info(
+            "Receipt data stored in Firestore",
+            receipt_id=review_response.receipt_id,
+            result=str(result)[:200] if result else None,
+        )
         
         # Get the image URL for the receipt
         # Try to get from tracked URLs first, otherwise construct it
+        logger.info(
+            "Retrieving image URL",
+            receipt_id=review_response.receipt_id,
+            image_url_in_tracked=review_response.receipt_id in app_context.image_urls,
+        )
         image_url = app_context.image_urls.get(review_response.receipt_id)
         if not image_url:
             # If not tracked, construct the URL (may need user_id/session_id from context)
@@ -425,9 +724,24 @@ async def review(
                 session_id="default_session",  # In production, get from review context
                 image_hash_id=review_response.receipt_id,
             )
-            logger.warning(f"Image URL not found in tracked URLs, constructed: {image_url}")
+            logger.warning(
+                "Image URL not found in tracked URLs, constructed",
+                receipt_id=review_response.receipt_id,
+                constructed_url=image_url,
+            )
+        else:
+            logger.info(
+                "Image URL retrieved from tracked URLs",
+                receipt_id=review_response.receipt_id,
+                image_url=image_url,
+            )
         
         # Prepare items for SQL insertion
+        logger.info(
+            "Preparing items for SQL insertion",
+            receipt_id=review_response.receipt_id,
+            hsa_eligible_items_count=len(review_response.approved_hsa_eligible_items),
+        )
         items_for_sql = [
             {
                 "name": item.name,
@@ -439,6 +753,11 @@ async def review(
         ]
         
         # Insert approved items into SQL database
+        logger.info(
+            "Inserting approved HSA eligible items into SQL database",
+            receipt_id=review_response.receipt_id,
+            items_count=len(items_for_sql),
+        )
         app_context.database.insert_approved_items(
             items=items_for_sql,
             store_name=review_response.store_name,
@@ -458,12 +777,32 @@ async def review(
         )
         
         # Get all rows from the database and return as JSON
+        logger.info(
+            "Retrieving all items from SQL database",
+            receipt_id=review_response.receipt_id,
+        )
         all_items = app_context.database.get_all_items()
+        logger.info(
+            "Retrieved all items from SQL database",
+            receipt_id=review_response.receipt_id,
+            total_items_count=len(all_items),
+        )
+        
+        logger.info(
+            "Review request processing completed successfully",
+            receipt_id=review_response.receipt_id,
+            total_items_returned=len(all_items),
+        )
         
         return {"items": all_items}
         
     except Exception as e:
-        logger.error("Error processing review", error_message=str(e))
+        logger.error(
+            "Error processing review request",
+            receipt_id=review_response.receipt_id if review_response else "unknown",
+            error_message=str(e),
+            exc_info=True,
+        )
         return {"error": f"Error processing review: {str(e)}", "items": []}
 
 

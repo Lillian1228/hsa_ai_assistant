@@ -43,7 +43,7 @@ def get_gcs_image_url(
     Get the GCS URL for an artifact image.
     
     The artifact service stores files in the format:
-    https://storage.cloud.google.com/{bucket_name}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0
+    https://storage.googleapis.com/{bucket_name}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0
     
     Args:
         app_name: The name of the application
@@ -55,8 +55,8 @@ def get_gcs_image_url(
         str: The HTTPS URL for the image (storage.cloud.google.com format)
     """
     # Construct the HTTPS URL based on artifact service structure
-    # Format: https://storage.cloud.google.com/{bucket}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0
-    https_url = f"https://storage.cloud.google.com/{SETTINGS.STORAGE_BUCKET_NAME}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0"
+    # Format: https://storage.googleapis.com/{bucket}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0
+    https_url = f"https://storage.googleapis.com/{SETTINGS.STORAGE_BUCKET_NAME}/{app_name}/{user_id}/{session_id}/{image_hash_id}/0"
     
     return https_url
 
@@ -172,11 +172,30 @@ async def format_user_request_to_adk_content_and_store_artifacts(
     Returns:
         types.Content: The formatted content for ADK
     """
+    logger.info(
+        "Formatting user request to ADK content",
+        app_name=app_name,
+        user_id=request.user_id,
+        session_id=request.session_id,
+        files_count=len(request.files) if request.files else 0,
+        has_text=bool(request.text),
+    )
+    
     # Create a list to hold parts
     parts = []
 
     # Handle image files if present
-    for data in request.files:
+    for idx, data in enumerate(request.files):
+        logger.info(
+            "Processing image file for ADK format",
+            image_index=idx + 1,
+            total_images=len(request.files),
+            mime_type=data.mime_type,
+            base64_length=len(data.serialized_image),
+            app_name=app_name,
+            user_id=request.user_id,
+            session_id=request.session_id,
+        )
         # Process the image and add string placeholder
 
         image_hash_id, image_byte, image_url = await store_uploaded_image_as_artifact(
@@ -185,6 +204,16 @@ async def format_user_request_to_adk_content_and_store_artifacts(
             user_id=request.user_id,
             session_id=request.session_id,
             image_data=data,
+        )
+        
+        logger.info(
+            "Image artifact stored and added to ADK content",
+            image_index=idx + 1,
+            image_hash_id=image_hash_id,
+            image_url=image_url,
+            app_name=app_name,
+            user_id=request.user_id,
+            session_id=request.session_id,
         )
 
         # Add inline data part
@@ -197,12 +226,27 @@ async def format_user_request_to_adk_content_and_store_artifacts(
         # Add image placeholder identifier
         placeholder = f"[IMAGE-ID {image_hash_id}]"
         parts.append(types.Part(text=placeholder))
+        logger.debug(
+            "Image placeholder added to ADK content",
+            image_index=idx + 1,
+            placeholder=placeholder,
+        )
 
     # Handle if user didn't specify text input
     if not request.text:
         request.text = " "
+        logger.debug("Empty text input, using space placeholder")
 
     parts.append(types.Part(text=request.text))
+    
+    logger.info(
+        "ADK content formatted successfully",
+        total_parts=len(parts),
+        text_part_included=True,
+        app_name=app_name,
+        user_id=request.user_id,
+        session_id=request.session_id,
+    )
 
     # Create and return the Content object
     return types.Content(role="user", parts=parts)

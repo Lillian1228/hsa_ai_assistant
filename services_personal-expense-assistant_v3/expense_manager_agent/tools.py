@@ -1,6 +1,7 @@
 # expense_manager_agent/tools.py
 
 import datetime
+import logging
 from typing import Dict, List, Any
 from google.cloud import firestore
 from google.cloud.firestore_v1.vector import Vector
@@ -9,6 +10,9 @@ from google.cloud.firestore_v1.base_query import And
 from google.cloud.firestore_v1.base_vector_query import DistanceMeasure
 from settings import get_settings
 from google import genai
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 SETTINGS = get_settings()
 DB_CLIENT = firestore.Client(
@@ -35,10 +39,12 @@ Receipt Image ID: {receipt_id}
 
 def sanitize_image_id(image_id: str) -> str:
     """Sanitize image ID by removing any leading/trailing whitespace."""
+    logger.info(f"Sanitizing image ID: '{image_id}'")
     if image_id.startswith("[IMAGE-"):
         image_id = image_id.split("ID ")[1].split("]")[0]
 
-    return image_id.strip()
+    sanitized_id = image_id.strip()
+    return sanitized_id
 
 
 def request_receipt_review(
@@ -84,14 +90,27 @@ def request_receipt_review(
             - description (str, optional): Detailed product description, especially if name is abbreviated. Defaults to empty string.
             - price (float): The price of the item.
             - quantity (int, optional): The quantity of the item. Defaults to 1 if not provided.
-        payment_card (str): The payment card type or name (e.g., "Visa", "Mastercard", "American Express").
-        card_last_four_digit (str): The last four digits of the payment card.
+        payment_card (str, optional): The payment card type or name (e.g., "Visa", "Mastercard", "American Express"). If paid in cash or gift card this can be missing. Defaults to empty string.
+        card_last_four_digit (str, optional): The last four digits of the payment card. If paid in cash or gift card this can be missing. Defaults to empty string.
 
     Returns:
         str: A message indicating that review has been requested. The agent should then
              return the review data in JSON format in the FINAL RESPONSE section.
     """
     try:
+        logger.info(f"Requesting review for image_id: {image_id}")
+        logger.info(
+            "request_receipt_review args: %s",
+            {
+                "image_id": image_id,
+                "store_name": store_name,
+                "date": date,
+                "total_cost": total_cost,
+                "payment_card": payment_card,
+                "card_last_four_digit": "xxxx",
+            },
+        )
+
         image_id = sanitize_image_id(image_id)
         
         # Validate date (accept various formats)
@@ -137,14 +156,14 @@ def request_receipt_review(
                     item["description"] = ""  # Default to empty string if not provided
 
         # Validate payment card fields
-        if not isinstance(payment_card, str):
-            raise ValueError("payment_card must be a string")
-        if not isinstance(card_last_four_digit, str):
-            raise ValueError("card_last_four_digit must be a string")
-        if card_last_four_digit and not card_last_four_digit.isdigit():
-            raise ValueError("card_last_four_digit must contain only digits")
-        if card_last_four_digit and len(card_last_four_digit) != 4:
-            raise ValueError("card_last_four_digit must be exactly 4 digits")
+        # if not isinstance(payment_card, str):
+        #     raise ValueError("payment_card must be a string")
+        # if not isinstance(card_last_four_digit, str):
+        #     raise ValueError("card_last_four_digit must be a string")
+        # if card_last_four_digit and not card_last_four_digit.isdigit():
+        #     raise ValueError("card_last_four_digit must contain only digits")
+        # if card_last_four_digit and len(card_last_four_digit) != 4:
+        #     raise ValueError("card_last_four_digit must be exactly 4 digits")
         
         # Return a message with the JSON data embedded for easy extraction
         # The agent should include this JSON in the FINAL RESPONSE section
@@ -166,6 +185,7 @@ def request_receipt_review(
         
         json_str = json_module.dumps(review_data, indent=2)
         
+        logger.info(f"Successfully created review request for receipt {image_id}")
         return f"""Review requested for receipt {image_id}. 
 
 IMPORTANT: You MUST include the following JSON in your FINAL RESPONSE section:
@@ -363,6 +383,18 @@ def search_receipts_by_metadata_filter(
         search_result_description = "Search by Metadata Results:\n"
         for doc in query.stream():
             data = doc.to_dict()
+            
+            # Combine all items for display
+            all_items_for_display = (
+                data.get("hsa_eligible_items", []) +
+                data.get("non_hsa_eligible_items", []) +
+                data.get("unsure_hsa_items", [])
+            )
+            data["items_text"] = "\n".join([
+                f"- {item.get('name', '')}: ${item.get('price', 0):.2f} x {item.get('quantity', 1)}"
+                for item in all_items_for_display
+            ])
+            
             data.pop(
                 EMBEDDING_FIELD_NAME, None
             )  # Remove embedding as it's not needed for display
@@ -413,6 +445,18 @@ def search_relevant_receipts_by_natural_language_query(
         search_result_description = "Search by Contextual Relevance Results:\n"
         for doc in vector_query.stream():
             data = doc.to_dict()
+            
+            # Combine all items for display
+            all_items_for_display = (
+                data.get("hsa_eligible_items", []) +
+                data.get("non_hsa_eligible_items", []) +
+                data.get("unsure_hsa_items", [])
+            )
+            data["items_text"] = "\n".join([
+                f"- {item.get('name', '')}: ${item.get('price', 0):.2f} x {item.get('quantity', 1)}"
+                for item in all_items_for_display
+            ])
+            
             data.pop(
                 EMBEDDING_FIELD_NAME, None
             )  # Remove embedding as it's not needed for display
