@@ -13,3 +13,4 @@
 *.swo
 *~
 .vite/
+__pycache__
