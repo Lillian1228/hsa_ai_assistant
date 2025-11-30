@@ -91,11 +91,11 @@ Only do this for valid receipt images.
 
   /*EXAMPLE START*/
 
-  # THINKING PROCESS
+  ### THINKING PROCESS
 
   Put your thinking process here
   
-  # FINAL RESPONSE
+  ### FINAL RESPONSE
 
   Put your final response to the user here. Keep the inline citations if any.
 
