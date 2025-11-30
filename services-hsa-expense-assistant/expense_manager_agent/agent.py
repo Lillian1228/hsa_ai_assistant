@@ -9,7 +9,7 @@ from expense_manager_agent.tools import (
     request_receipt_review,
 )
 from google.adk.tools import google_search, AgentTool
-from expense_manager_agent.callbacks import modify_image_data_in_history
+from expense_manager_agent.callbacks import modify_image_data_in_history, add_inline_citations_callback
 import os
 from settings import get_settings
 from google.adk.planners import BuiltInPlanner
@@ -29,12 +29,15 @@ with open(prompt_path, "r") as file:
 web_search_agent = Agent(
     name="web_search_agent",
     model="gemini-2.5-flash",
-    instruction="""You are a specialized web search agent. Your only job is to use the
-    google_search tool to find 2-3 pieces of relevant information on the given question and present the findings with citations.""",
+    # instruction="""You are a specialized web search agent. Your only job is to use the
+    # google_search tool to find 2-3 pieces of relevant information on the given question and present the findings with citations.""",
+    instruction="""Answer questions using Google Search when needed. Always cite sources.""",
+    description="Professional search assistant with Google Search capabilities",
     tools=[
         google_search,
     ],
     output_key="search_results",
+    after_agent_callback=add_inline_citations_callback,
 )
 
 
@@ -42,7 +45,7 @@ root_agent = Agent(
     name="expense_manager_agent",
     model="gemini-2.5-flash",
     description=(
-        "Personal expense agent to help user track expenses, analyze receipts, and manage their financial records"
+        "Personal HSA Expense Manager to help user analyze receipts, classify eligible expenses, and manage their expense records for future reimbursement"
     ),
     instruction=task_prompt,
     tools=[
@@ -52,12 +55,12 @@ root_agent = Agent(
         search_receipts_by_metadata_filter,
         search_relevant_receipts_by_natural_language_query,
         AgentTool(web_search_agent),
-        # google_search,
+
     ],
-    planner=BuiltInPlanner(
-        thinking_config=types.ThinkingConfig(
-            thinking_budget=2048,
-        )
-    ),
+    # planner=BuiltInPlanner(
+    #     thinking_config=types.ThinkingConfig(
+    #         thinking_budget=2048,
+    #     )
+    # ),
     before_model_callback=modify_image_data_in_history,
 )
