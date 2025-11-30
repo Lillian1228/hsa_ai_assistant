@@ -41,6 +41,10 @@ export const useChat = (sessionId: string, userId: string) => {
           type: 'assistant',
           content: response.response,
           timestamp: new Date(),
+          attachments: response.attachments?.map(att => ({
+            serialized_image: att.serialized_image,
+            mime_type: att.mime_type
+          })),
         };
         addMessage(assistantMessage);
       }
@@ -82,13 +86,13 @@ export const useChat = (sessionId: string, userId: string) => {
           total_hsa_cost: (response.review_request.hsa_eligible_items || []).reduce((sum, item) => sum + item.price, 0),
           image_url: response.image_url,
         };
-        
+
         setCurrentReceipt(receiptData);
         navigate('/review');
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Send failed');
-      
+
       // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -97,7 +101,7 @@ export const useChat = (sessionId: string, userId: string) => {
         timestamp: new Date(),
       };
       addMessage(errorMessage);
-      
+
       antdMessage.error(error.message);
       console.error('Send message failed:', error);
     } finally {

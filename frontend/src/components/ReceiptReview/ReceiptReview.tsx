@@ -32,7 +32,10 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { addApprovedReceipt, setAllItems } = useReceiptStore();
-  const [editedData, setEditedData] = useState<ReceiptData>(receiptData);
+  const [editedData, setEditedData] = useState<ReceiptData>({
+    ...receiptData,
+    date: receiptData.date ? new Date(receiptData.date) : new Date(),
+  });
   const [isApproving, setIsApproving] = useState(false);
 
   // Calculate HSA total amount
@@ -155,7 +158,7 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
     setIsApproving(true);
     try {
       // Convert ItemBasic to ReceiptItem (remove id and is_eligible)
-      const convertToReceiptItem = (items: Item[]) => 
+      const convertToReceiptItem = (items: Item[]) =>
         items.map(item => ({
           name: item.name,
           price: item.price,
@@ -167,7 +170,7 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
       const response = await apiService.approveReceipt({
         receipt_id: editedData.receipt_id,
         store_name: editedData.store_name,
-        date: editedData.date.toISOString(), // Convert Date to ISO string
+        date: (editedData.date ? new Date(editedData.date) : new Date()).toISOString(), // Convert Date to ISO string
         approved_hsa_eligible_items: convertToReceiptItem(editedData.eligible_items),
         approved_non_hsa_eligible_items: convertToReceiptItem(editedData.non_eligible_items),
         approved_unsure_hsa_items: convertToReceiptItem(editedData.unsure_items),
@@ -180,7 +183,7 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
       // Use setAllItems instead of addItems to replace old data instead of accumulating it
       console.log('✅ Approve response received:', response);
       console.log('✅ Items count:', response.items?.length);
-      
+
       // Ensure we only save items that are eligible, even if backend returns everything.
       // Since ItemFull no longer has is_eligible property in the type definition, we cast to any to check the runtime value.
       if (response.items && response.items.length > 0) {
@@ -191,7 +194,7 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
           // If is_eligible is present, check it. If not present, assume true (or false? better assume true if we changed backend contract)
           // However, the user requirement is to not show non-eligible.
           // If the backend still returns mixed list with is_eligible flag, we must filter.
-          return item.is_eligible !== false; 
+          return item.is_eligible !== false;
         });
 
         setAllItems(eligibleItems);
@@ -244,9 +247,9 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
           <div className="receipt-image-section">
             <Card className="receipt-image-card" title="📷 Receipt Image">
               <div className="receipt-image-container">
-                <img 
-                  src={editedData.receipt_image || editedData.image_url} 
-                  alt="Receipt" 
+                <img
+                  src={editedData.receipt_image || editedData.image_url}
+                  alt="Receipt"
                   className="receipt-image"
                 />
               </div>
@@ -275,69 +278,69 @@ export const ReceiptReview: React.FC<ReceiptReviewProps> = ({
               />
             </Card>
 
-        {/* Item Lists */}
-        <Card 
-          className="items-card eligible-card" 
-          title={
-            <Space>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-              <span>HSA Eligible Items</span>
-              <Text type="secondary">({editedData.eligible_items.length} items)</Text>
-            </Space>
-          }
-        >
-          <ItemList
-            items={editedData.eligible_items}
-            isEligible={true}
-            onItemUpdate={(id, item) => handleItemUpdate(id, item, 'eligible')}
-            onItemDelete={(id) => handleItemDelete(id, 'eligible')}
-            onItemMove={(id) => handleItemMove(id, true)}
-          />
-        </Card>
+            {/* Item Lists */}
+            <Card
+              className="items-card eligible-card"
+              title={
+                <Space>
+                  <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                  <span>HSA Eligible Items</span>
+                  <Text type="secondary">({editedData.eligible_items.length} items)</Text>
+                </Space>
+              }
+            >
+              <ItemList
+                items={editedData.eligible_items}
+                isEligible={true}
+                onItemUpdate={(id, item) => handleItemUpdate(id, item, 'eligible')}
+                onItemDelete={(id) => handleItemDelete(id, 'eligible')}
+                onItemMove={(id) => handleItemMove(id, true)}
+              />
+            </Card>
 
-        {/* Unsure Items - New section */}
-        {editedData.unsure_items && editedData.unsure_items.length > 0 && (
-          <Card 
-            className="items-card unsure-card"
-            title={
-              <Space>
-                <SwapOutlined style={{ color: '#faad14' }} />
-                <span>Unsure Items (Needs Review)</span>
-                <Text type="secondary">({editedData.unsure_items.length} items)</Text>
-              </Space>
-            }
-          >
-            <ItemList
-              items={editedData.unsure_items}
-              isEligible={false}
-              isUnsure={true}
-              onItemUpdate={(id, item) => handleItemUpdate(id, item, 'unsure')}
-              onItemDelete={(id) => handleItemDelete(id, 'unsure')}
-              onItemMove={(id) => {}} // Not used for unsure items
-              onMoveToEligible={handleUnsureToEligible}
-              onMoveToNonEligible={handleUnsureToNonEligible}
-            />
-          </Card>
-        )}
+            {/* Unsure Items - New section */}
+            {editedData.unsure_items && editedData.unsure_items.length > 0 && (
+              <Card
+                className="items-card unsure-card"
+                title={
+                  <Space>
+                    <SwapOutlined style={{ color: '#faad14' }} />
+                    <span>Unsure Items (Needs Review)</span>
+                    <Text type="secondary">({editedData.unsure_items.length} items)</Text>
+                  </Space>
+                }
+              >
+                <ItemList
+                  items={editedData.unsure_items}
+                  isEligible={false}
+                  isUnsure={true}
+                  onItemUpdate={(id, item) => handleItemUpdate(id, item, 'unsure')}
+                  onItemDelete={(id) => handleItemDelete(id, 'unsure')}
+                  onItemMove={(id) => { }} // Not used for unsure items
+                  onMoveToEligible={handleUnsureToEligible}
+                  onMoveToNonEligible={handleUnsureToNonEligible}
+                />
+              </Card>
+            )}
 
-        <Card 
-          className="items-card non-eligible-card"
-          title={
-            <Space>
-              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-              <span>Non-eligible Items</span>
-              <Text type="secondary">({editedData.non_eligible_items.length} items)</Text>
-            </Space>
-          }
-        >
-          <ItemList
-            items={editedData.non_eligible_items}
-            isEligible={false}
-            onItemUpdate={(id, item) => handleItemUpdate(id, item, 'non_eligible')}
-            onItemDelete={(id) => handleItemDelete(id, 'non_eligible')}
-            onItemMove={(id) => handleItemMove(id, false)}
-          />
-        </Card>
+            <Card
+              className="items-card non-eligible-card"
+              title={
+                <Space>
+                  <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+                  <span>Non-eligible Items</span>
+                  <Text type="secondary">({editedData.non_eligible_items.length} items)</Text>
+                </Space>
+              }
+            >
+              <ItemList
+                items={editedData.non_eligible_items}
+                isEligible={false}
+                onItemUpdate={(id, item) => handleItemUpdate(id, item, 'non_eligible')}
+                onItemDelete={(id) => handleItemDelete(id, 'non_eligible')}
+                onItemMove={(id) => handleItemMove(id, false)}
+              />
+            </Card>
 
             {/* Action Buttons */}
             <div className="action-buttons">
