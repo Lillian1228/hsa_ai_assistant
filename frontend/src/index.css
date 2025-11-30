@@ -121,7 +121,8 @@ code {
 }
 
 .chat-section {
-  width: 420px;
+  width: 33%;
+  min-width: 400px;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
