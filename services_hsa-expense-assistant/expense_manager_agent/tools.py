@@ -206,7 +206,7 @@ def store_receipt_data(
     transaction_time: str,
     total_amount: float,
     hsa_eligible_items: List[Dict[str, Any]],
-    currency: str = "IDR",
+    currency: str = "USD",
     non_hsa_eligible_items: List[Dict[str, Any]] = None,
     unsure_hsa_items: List[Dict[str, Any]] = None,
 ) -> str:
@@ -230,7 +230,7 @@ def store_receipt_data(
             - price (float): The price of the item.
             - quantity (int, optional): The quantity of the item. Defaults to 1 if not provided.
         currency (str, optional): The currency of the transaction, can be derived from the store location.
-            If unsure, default is "IDR".
+            If unsure, default is "USD".
         non_hsa_eligible_items (List[Dict[str, Any]], optional): A list of non-HSA eligible items. Defaults to None.
         unsure_hsa_items (List[Dict[str, Any]], optional): A list of unsure HSA items. Defaults to None.
 

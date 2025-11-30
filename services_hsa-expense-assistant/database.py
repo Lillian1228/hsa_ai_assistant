@@ -53,15 +53,6 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            # Try to drop category column if it exists (for existing databases)
-            try:
-                # SQLite 3.35.0+ supports DROP COLUMN
-                cursor.execute("ALTER TABLE approved_items DROP COLUMN category")
-                conn.commit()
-                logger.info("Removed category column from existing database")
-            except sqlite3.OperationalError:
-                # Column doesn't exist or SQLite version doesn't support DROP COLUMN
-                pass
             
             conn.commit()
             logger.info("Database initialized successfully")
