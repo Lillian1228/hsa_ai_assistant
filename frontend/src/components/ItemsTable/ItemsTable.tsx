@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Table, Tag, Space, Button, Input, Select, DatePicker, Card, Tooltip } from 'antd';
+import { Table, Space, Button, Input, Select, DatePicker, Card, Tooltip } from 'antd';
 import { LinkOutlined, SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { ItemFull } from '@/types';
@@ -95,7 +95,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
 
   // Calculate statistics
   const statistics = useMemo(() => {
-    const totalCost = processedData.reduce((sum, item) => sum + (item.price || 0), 0);
+    const totalCost = processedData.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
     return {
       total: processedData.length,
       totalCost,
@@ -145,7 +145,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({ items }) => {
       render: (qty: number) => qty || 0,
     },
     {
-      title: 'Price',
+      title: 'Unit Price',
       dataIndex: 'price',
       key: 'price',
       width: 90,
