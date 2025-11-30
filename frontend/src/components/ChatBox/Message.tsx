@@ -2,6 +2,8 @@ import React from 'react';
 import { Avatar, Image } from 'antd';
 import { UserOutlined, RobotOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { Message as MessageType } from '@/types';
 import './Message.css';
 
@@ -58,7 +60,11 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
           />
           <div className="message-content-wrapper">
             <div className="message-bubble message-bubble-assistant">
-              <div className="message-text">{message.content}</div>
+              <div className="message-text">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.content}
+                </ReactMarkdown>
+              </div>
               {renderAttachments()}
             </div>
             <div className="message-time">
@@ -73,7 +79,11 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
         <div className="message-container message-container-user">
           <div className="message-content-wrapper">
             <div className="message-bubble message-bubble-user">
-              <div className="message-text">{message.content}</div>
+              <div className="message-text">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {message.content}
+                </ReactMarkdown>
+              </div>
               {renderAttachments()}
             </div>
             <div className="message-time">
