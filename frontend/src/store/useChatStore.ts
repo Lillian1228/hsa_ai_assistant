@@ -13,6 +13,7 @@ interface ChatState {
   setMessages: (messages: Message[]) => void;
   setLoading: (loading: boolean) => void;
   clearMessages: () => void;
+  deleteLastMessage: () => void;
 }
 
 /**
@@ -27,5 +28,6 @@ export const useChatStore = create<ChatState>((set) => ({
   setMessages: (messages) => set({ messages }),
   setLoading: (loading) => set({ isLoading: loading }),
   clearMessages: () => set({ messages: [] }),
+  deleteLastMessage: () => set((state) => ({ messages: state.messages.slice(0, -1) })),
 }));
 

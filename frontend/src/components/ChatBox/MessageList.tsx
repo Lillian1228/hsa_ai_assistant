@@ -19,6 +19,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   loading = false,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLength = useRef(0);
 
   // Auto scroll to bottom
   const scrollToBottom = () => {
@@ -26,7 +27,10 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > prevMessagesLength.current) {
+      scrollToBottom();
+    }
+    prevMessagesLength.current = messages.length;
   }, [messages]);
 
   if (messages.length === 0 && !loading) {
@@ -52,7 +56,7 @@ export const MessageList: React.FC<MessageListProps> = ({
       {messages.map((message) => (
         <Message key={message.id} message={message} />
       ))}
-      
+
       {/* Loading indicator */}
       {loading && (
         <div className="message-loading">

@@ -1,6 +1,0 @@
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-f', 'Dockerfile.frontend.tmp', '-t', 'gcr.io/magnetic-signer-451121-g4/hsa-ai-assistant-frontend', '.']
-images:
-  - 'gcr.io/magnetic-signer-451121-g4/hsa-ai-assistant-frontend'
-timeout: 1200s
