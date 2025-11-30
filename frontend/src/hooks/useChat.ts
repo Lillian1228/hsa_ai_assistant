@@ -9,11 +9,16 @@ import type { Message } from '@/types';
  * Chat functionality Hook
  */
 export const useChat = (sessionId: string, userId: string) => {
-  const { messages, addMessage, setLoading, isLoading } = useChatStore();
+  const { messages, addMessage, setLoading, isLoading, clearMessages } = useChatStore();
   const navigate = useNavigate();
   const { setCurrentReceipt } = useReceiptStore();
 
   const sendMessage = async (text: string) => {
+    if (text.trim().toLowerCase() === 'clear') {
+      clearMessages();
+      return;
+    }
+
     setLoading(true);
 
     // Add user message
