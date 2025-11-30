@@ -408,15 +408,6 @@ async def chat(
             )
             
             # Key Concept: is_final_response() marks the concluding message for the turn
-            event_num += 1
-            # log event number and event content
-            logger.info(f"Event {event_num}: {event.content}", author=event.author)
-            if event.content and event.content.parts:
-                logger.info(f"Event {event_num} content: ", text=event.content.parts[0].text)
-            if event.get_function_calls():
-                logger.info(f"Event {event_num} function calls: ", function_calls_name=[call.name for call in event.get_function_calls()], function_calls_args=[call.args for call in event.get_function_calls()])
-            if event.get_function_responses():
-                logger.info(f"Event {event_num} function responses: ", function_responses=[response.response for response in event.get_function_responses()])
             if event.is_final_response():
                 logger.info(
                     "Final response event received",
@@ -449,8 +440,7 @@ async def chat(
                         session_id=session_id,
                     )
                 break  # Stop processing events once the final response is found
-        logger.info("====================================")
-
+        
         logger.info(
             "Agent processing completed",
             total_events=event_count,
