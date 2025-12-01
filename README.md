@@ -208,48 +208,91 @@ We provide an automated shell script to streamline the deployment process to Goo
 ## Backend
 
 ### Local Development
-1. In google cloud console, create a Google Cloud Project
-2. Create a Firestore Database 
-3. Setup Cloud Project in Cloud Shell Terminal:
-	1. 	`gcloud services enable aiplatform.googleapis.com \
+
+1. **Create a Google Cloud Project**
+   - In Google Cloud Console, create a new project
+
+2. **Create a Firestore Database**
+   - Set up a Firestore database in your project
+
+3. **Enable Required Services in Cloud Shell Terminal**
+   
+   ```bash
+   gcloud services enable aiplatform.googleapis.com \
                        firestore.googleapis.com \
                        run.googleapis.com \
                        cloudbuild.googleapis.com \
-                       cloudresourcemanager.googleapis.com`
-4. Prepare Google Cloud Storage Bucket
-	1. `gsutil mb -l us-central1 gs://personal-expense-{your-project-id}`
-5. Create Firestore index for search:
-	1. To support compound queries: 
-    
-        `cloud firestore indexes composite create \
-        --collection-group=personal-expense-assistant-receipts \
-        --field-config field-path=total_amount,order=ASCENDING \
-        --field-config field-path=transaction_time,order=ASCENDING \
-        --field-config field-path=__name__,order=ASCENDING \
-        --database="(default)"`
-    2. To support vector search: 
-    
-        `gcloud firestore indexes composite create \
-        --collection-group="personal-expense-assistant-receipts" \
-        --query-scope=COLLECTION \
-        --field-config field-path="embedding",vector-config='{"dimension":"768", "flat": "{}"}' \
-        --database="(default)"`
-6. Install Google Cloud CLI and create a local authentication credential for your account:
-	1. `gcloud auth application-default login`
-7. Create a virtual environment and set up all dependencies:
-	1. `uv sync --fronzen`
-8. run backend locally:
-	1. `uv run backend.py`
-9. Access backend swagger api at: `http://localhost:8080/docs`
+                       cloudresourcemanager.googleapis.com
+   ```
 
-	
-### Deploy to cloud
-To deploy the backend to cloud using CloudRun, use this command:
+4. **Prepare Google Cloud Storage Bucket**
+   
+   ```bash
+   gsutil mb -l us-central1 gs://personal-expense-{your-project-id}
+   ```
+   
+   > **Note:** Replace `{your-project-id}` with your actual project ID
 
-`gcloud run deploy personal-expense-assistant \
-                  --source . \
-                  --port=8080 \
-                  --allow-unauthenticated \
-                  --env-vars-file=settings.yaml \
-                  --memory 1024Mi \
-                  --region us-central1`
+5. **Create Firestore Indexes**
+   
+   a. **Composite index for compound queries:**
+   
+   ```bash
+   gcloud firestore indexes composite create \
+     --collection-group=personal-expense-assistant-receipts \
+     --field-config field-path=total_amount,order=ASCENDING \
+     --field-config field-path=transaction_time,order=ASCENDING \
+     --field-config field-path=__name__,order=ASCENDING \
+     --database="(default)"
+   ```
+   
+   b. **Vector search index:**
+   
+   ```bash
+   gcloud firestore indexes composite create \
+     --collection-group="personal-expense-assistant-receipts" \
+     --query-scope=COLLECTION \
+     --field-config field-path="embedding",vector-config='{"dimension":"768", "flat": "{}"}' \
+     --database="(default)"
+   ```
+
+6. **Install Google Cloud CLI and Authenticate**
+   
+   ```bash
+   gcloud auth application-default login
+   ```
+
+7. **Set Up Python Environment and Dependencies**
+   
+   ```bash
+   uv sync --frozen
+   ```
+
+8. **Run Backend Locally**
+   
+   ```bash
+   uv run backend.py
+   ```
+
+9. **Access Backend Swagger API**
+   - Open your browser and navigate to: `http://localhost:8080/docs`
+
+### Deploy to Cloud
+
+To deploy the backend to Cloud Run, use the following command:
+
+```bash
+gcloud run deploy personal-expense-assistant \
+  --source . \
+  --port=8080 \
+  --allow-unauthenticated \
+  --env-vars-file=settings.yaml \
+  --memory 1024Mi \
+  --region us-central1
+```
+
+**Notes:**
+- Replace `personal-expense-assistant` with your preferred service name
+- Ensure `settings.yaml` exists and contains the necessary configuration
+- The `--allow-unauthenticated` flag makes the service publicly accessible
+- Adjust `--memory` if needed based on your requirements
