@@ -1,0 +1,118 @@
+/**
+ * ExpenseItem Styles
+ */
+
+.expense-item-card {
+  border-radius: 16px;
+  border: 2px solid rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.expense-item-card:hover {
+  border-color: rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.expense-item-card .ant-card-body {
+  padding: 0;
+}
+
+.expense-collapse .ant-collapse-header {
+  padding: 20px 24px !important;
+}
+
+.expense-collapse .ant-collapse-content-box {
+  padding: 0 24px 20px !important;
+}
+
+.expense-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+}
+
+.header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-meta {
+  font-size: 13px;
+}
+
+.header-amount {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.expense-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.details-section .ant-typography {
+  margin-bottom: 8px;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.item-row:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.payment-info {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .expense-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-amount {
+    text-align: left;
+    width: 100%;
+  }
+
+  .expense-collapse .ant-collapse-header {
+    padding: 16px !important;
+  }
+
+  .expense-collapse .ant-collapse-content-box {
+    padding: 0 16px 16px !important;
+  }
+
+  .items-list {
+    padding-left: 0;
+  }
+}
+

@@ -12,4 +12,5 @@
 *.swp
 *.swo
 *~
-
+.vite/
+__pycache__
