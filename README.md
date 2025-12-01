@@ -2,13 +2,13 @@
 
 The link to our deployed HSA AI Assistant: https://hsa-ai-assistant-frontend-111362542486.us-central1.run.app/
 
-# Problem
+## Problem
 
 Many Health Savings Account (HSA) users struggle to keep track of receipts and confirm which medical expenses actually qualify. Unlike FSAs, HSAs don’t block ineligible purchases, which means it’s entirely on the account holder to document every expense and prove eligibility if the IRS ever asks. Losing a receipt or forgetting what something was for can lead to taxes and a 20% penalty—an anxiety most people don’t think about until it’s too late. In reality, many of us toss paper receipts in a drawer, let them fade in our wallets, or try to stay organized with half-finished spreadsheets and scattered Google Drive folders.
 
 As HSAs grow—over $137 billion spread across 38 million accounts—more people are running into these exact problems. Online forums are filled with users trading improvised tracking hacks and asking for better tools. It’s clear that people want a simpler, smarter way to store receipts, check eligibility, and protect their tax advantages.
 
-# Agentic Solution
+## Agentic Solution
 
 
 Existing solutions that aim to simplify HSA/FSA expense tracking include HSA Store’s ExpenseTracker, Silver, TrackHSA.com etc. and none have perfectly solved the need. One might scan receipts but not handle web search for obscure items, another might auto-connect purchases but lacks conversational queries, etc. This project aims to combine and improve these capabilities into a single intelligent agentic system.
@@ -37,7 +37,7 @@ Below outlines how a typical interaction would work:
 ![page3](images/page3.png)
 
 
-# Architecture
+## Architecture
 
 ![eg](images/overview.png)
 
@@ -132,7 +132,7 @@ To optimize the context window and improve agent performance, we employ context 
 
 
 
-# Agent Deployment Instructions
+## Agent Deployment Instructions
 
 ## Frontend Setup
 
