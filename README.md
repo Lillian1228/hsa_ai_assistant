@@ -44,7 +44,7 @@ Throughout this workflow, the emphasis is on minimizing user effort: automating 
 
 # Architecture
 
-![eg](src/overview.png)
+![eg](images/overview.png)
 
 ## Frontend: User Interactions
 
@@ -89,6 +89,8 @@ Core to our hsa expense assistant is the expense manager agent which handles bot
 
 **Multi-agent system**: The system is built on a multi-agent architecture where agents are powered by Large Language Models (LLMs). The primary agent delegates specific sub-tasks to specialized agents or tools, ensuring efficient and accurate processing of complex user requests. 
 
+![agent_workflow](images/agent_flow.png)
+
 ### 1. Agent Custom Tools
 
 The expense manager agent uses four custom tools to handle receipt data and queries:
@@ -114,7 +116,7 @@ This tool uses semantic search via vector embeddings to find receipts by meaning
 
 We utilize a multi-agent architecture where specialized agents function as tools for the root agent. The `web_search_agent` is a prime example, powered by `gemini-2.5-flash` and equipped with the built-in `google_search` tool. When the root `expense_manager_agent` encounters a query requiring external knowledge (e.g., verifying if a specific item is HSA-eligible), it delegates the task to the `web_search_agent`, which performs the search and returns cited findings.
 
-## Session & Memory Management
+### 3. Session & Memory Management
 
 **Sessions & State Management**: We use `InMemorySessionService` to manage active chat sessions, maintaining the immediate conversation state in memory for fast access. `GcsArtifactService` handles the storage of large artifacts like receipt images, keeping the context window lightweight.
 
@@ -122,7 +124,7 @@ We utilize a multi-agent architecture where specialized agents function as tools
 *   **Firestore (Vector DB)**: Stores receipt embeddings and metadata, enabling semantic search and retrieval of past expenses.
 *   **SQLite (Structured DB)**: Acts as the definitive record for approved, structured expense data, ensuring data integrity for reporting.
 
-## Context Engineering
+### 4. Context Engineering
 
 To optimize the context window and improve agent performance, we employ context engineering techniques via callbacks:
 *   **Context Compaction**: `modify_image_data_in_history` processes chat history before it reaches the model, managing how image data is represented to prevent context overflow.
