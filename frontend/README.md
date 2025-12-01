@@ -18,11 +18,14 @@ The frontend facilitates four key user interactions. Below is the flow of data b
 *   **User Action**: User uploads a receipt image via the dedicated upload area or chat.
 *   **API Request (`POST /chat`)**:
     *   **Input**: `{ text: "Please analyze this receipt", files: [Base64Image], ... }`
-*   **API Response**:
-    *   **Output**: Returns a structured `review_request` object containing AI-extracted data (store name, date, line items, HSA eligibility status).
-*   **Frontend Action**: Parses the `review_request` and redirects the user to the **Review & Approve** page.
 
-### 3. Review & Approve (Step 3)
+### 3. AI Analysis & Review Request (Step 2)
+*   **System Action**: The AI Agent analyzes the receipt, identifying items and categorizing them as HSA-eligible or non-eligible.
+*   **API Response**:
+    *   **Output**: Returns a structured `review_request` object containing extracted data (store, date, items) and their eligibility status.
+*   **Frontend Action**: Automatically navigates the user to the **Review & Approve** page to verify the AI's classification.
+
+### 4. Review & Approve (Step 3)
 *   **User Action**: User verifies and edits the extracted receipt data (e.g., correcting prices, moving items between "HSA Eligible" and "Non-Eligible" categories) and clicks "Approve".
 *   **API Request (`POST /review`)**:
     *   **Input**: `{ receipt_id: string, approved_hsa_eligible_items: Item[], approved_non_hsa_eligible_items: Item[], ... }`
@@ -30,7 +33,7 @@ The frontend facilitates four key user interactions. Below is the flow of data b
     *   **Output**: `{ items: ItemFull[] }` (Returns the fully processed and stored item records).
 *   **Frontend Action**: Displays a success message and automatically navigates the user to the **Expense Summary** page (Step 4).
 
-### 4. Expense Summary (Step 4)
+### 5. Expense Summary (Step 4)
 *   **User Action**: User navigates to the Summary page to view their HSA spending report.
 *   **API Request**:
     *   *Note: Currently integrated within the chat flow or local state management.*

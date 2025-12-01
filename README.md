@@ -62,11 +62,14 @@ The frontend facilitates four key user interactions. Below is the flow of data b
 *   **User Action**: User uploads a receipt image via the dedicated upload area or chat.
 *   **API Request (`POST /chat`)**:
     *   **Input**: `{ text: "Please analyze this receipt", files: [Base64Image], ... }`
-*   **API Response**:
-    *   **Output**: Returns a structured `review_request` object containing AI-extracted data (store name, date, line items, HSA eligibility status).
-*   **Frontend Action**: Parses the `review_request` and redirects the user to the **Review & Approve** page.
 
-### 3. Review & Approve (Step 3)
+### 3. AI Analysis & Review Request (Step 2)
+*   **System Action**: The AI Agent analyzes the receipt, identifying items and categorizing them as HSA-eligible or non-eligible.
+*   **API Response**:
+    *   **Output**: Returns a structured `review_request` object containing extracted data (store, date, items) and their eligibility status.
+*   **Frontend Action**: Automatically navigates the user to the **Review & Approve** page to verify the AI's classification.
+
+### 4. Review & Approve (Step 3)
 *   **User Action**: User verifies and edits the extracted receipt data (e.g., correcting prices, moving items between "HSA Eligible" and "Non-Eligible" categories) and clicks "Approve".
 *   **API Request (`POST /review`)**:
     *   **Input**: `{ receipt_id: string, approved_hsa_eligible_items: Item[], approved_non_hsa_eligible_items: Item[], ... }`
@@ -74,7 +77,7 @@ The frontend facilitates four key user interactions. Below is the flow of data b
     *   **Output**: `{ items: ItemFull[] }` (Returns the fully processed and stored item records).
 *   **Frontend Action**: Displays a success message and automatically navigates the user to the **Expense Summary** page (Step 4).
 
-### 4. Expense Summary (Step 4)
+### 5. Expense Summary (Step 4)
 *   **User Action**: User navigates to the Summary page to view their HSA spending report.
 *   **API Request**:
     *   *Note: Currently integrated within the chat flow or local state management.*
@@ -82,7 +85,9 @@ The frontend facilitates four key user interactions. Below is the flow of data b
 
 ## Agent Workflow: Task Delegation with Tools
 
-Core to our hsa expense assistant is the expense manager agent which handles both text and image user requests with dedicated prompt instructions and default diverse thinking mode. 
+Core to our hsa expense assistant is the expense manager agent which handles both text and image user requests with dedicated prompt instructions and default diverse thinking mode.
+
+**Multi-agent system**: The system is built on a multi-agent architecture where agents are powered by Large Language Models (LLMs). The primary agent delegates specific sub-tasks to specialized agents or tools, ensuring efficient and accurate processing of complex user requests. 
 
 ### 1. Agent Custom Tools
 
@@ -107,15 +112,27 @@ This tool uses semantic search via vector embeddings to find receipts by meaning
 
 ### 2. Sub Agent as Tool
 
-<placeholder
+We utilize a multi-agent architecture where specialized agents function as tools for the root agent. The `web_search_agent` is a prime example, powered by `gemini-2.5-flash` and equipped with the built-in `google_search` tool. When the root `expense_manager_agent` encounters a query requiring external knowledge (e.g., verifying if a specific item is HSA-eligible), it delegates the task to the `web_search_agent`, which performs the search and returns cited findings.
 
-### 3. Session & Memory Management
+## Session & Memory Management
 
-<placeholder
+**Sessions & State Management**: We use `InMemorySessionService` to manage active chat sessions, maintaining the immediate conversation state in memory for fast access. `GcsArtifactService` handles the storage of large artifacts like receipt images, keeping the context window lightweight.
+
+**Long-term Memory**:
+*   **Firestore (Vector DB)**: Stores receipt embeddings and metadata, enabling semantic search and retrieval of past expenses.
+*   **SQLite (Structured DB)**: Acts as the definitive record for approved, structured expense data, ensuring data integrity for reporting.
+
+## Context Engineering
+
+To optimize the context window and improve agent performance, we employ context engineering techniques via callbacks:
+*   **Context Compaction**: `modify_image_data_in_history` processes chat history before it reaches the model, managing how image data is represented to prevent context overflow.
+*   **Response Enhancement**: `add_inline_citations_callback` post-processes the agent's output to ensure citations from the web search agent are correctly formatted and integrated.
 
 ## Backend: Database and Logging
 
-<placeholder
+**Observability**: The backend implements comprehensive structured logging using a custom `logger` module. Every request is tracked via `RequestLoggingMiddleware`, capturing inputs, processing times, and errors. The agent's thought process (thinking mode) and final responses are also logged, providing full visibility into the AI's decision-making.
+
+**Deployment**: The system is deployed as decoupled microservices on Google Cloud Run. The frontend and backend are containerized separately, allowing for independent scaling and maintenance. The backend connects to Google Cloud services (Firestore, Vertex AI, Cloud Storage) using application-default credentials.
 
 
 
