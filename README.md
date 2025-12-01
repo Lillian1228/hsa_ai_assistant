@@ -1,3 +1,7 @@
+# HSA AI Assistant
+
+The link to our deployed HSA AI Assistant: https://hsa-ai-assistant-frontend-111362542486.us-central1.run.app/
+
 # Problem
 
 Health Savings Account (HSA) holders face the challenge of managing receipts and eligibility for medical expenses. Unlike Flexible Spending Accounts (FSAs), where non-qualified purchases are automatically blocked, HSA users can spend on anything – risking taxes and penalties if those expenses aren’t eligible [[1]](https://www.hrmorning.com/articles/hsa-requirements-receipts-recordkeeping/#:~:text=,track%20the%20purchases%20employees%20make). The IRS requires account holders to verify that each expense is HSA-eligible and retain receipts as proof [[2]](https://www.hrmorning.com/articles/hsa-requirements-receipts-recordkeeping/#:~:text=up%20with%20a%20tax%20bill,it%E2%80%99s%20important%20to%20help%20your). Failure to do so can result in a 20% penalty on unqualified purchases (plus income tax on that amount) if audited [[3]](https://www.hrmorning.com/articles/hsa-requirements-receipts-recordkeeping/#:~:text=is%20to%20help%20employees%20avoid,for%20at%20least%20that%20long).
@@ -22,11 +26,15 @@ The AI agent will operate through a straightforward, user-centric workflow. Belo
 
 1. **Capture or Upload Receipt:** The user inputs a receipt – this could be a photo taken via smartphone, a scanned image, or a PDF from an online provider. For example, a user might upload a pharmacy receipt or an Explanation of Benefits (EOB) document.
 
+![page1](images/page1.png)
+
 2. **OCR and Data Extraction**: The agent uses a multimodal LLM such as Gemini 2.5 as its core to extract text from the receipt image. Key fields like date, provider/merchant name, line-item descriptions, and discounts, and final amounts are identified. 
 
 3. **HSA Eligibility Check**: For each expense item, the agent evaluates its HSA eligibility using its internal knowledge and web search tool when uncertain. This step may involve calling an external API or searching the web (as the agent is allowed internet access) to confirm edge cases. 
 
 4. **AI Assistance and Confirmation**: The agent can annotate the receipt data with preliminary decisions (e.g., marking each line or the whole receipt as “HSA-eligible”, “not eligible”, "unsure"). It might also estimate the product name (e.g., “RX” inferred as "Prescription") based on the product abbreviation on a receipt. This information is then presented to the user through the frontend UI for review. The user can then correct any mistakes (e.g., if the AI misread something or if a borderline item needs user judgment). User review and the ability to modify entries are crucial to maintain accuracy and trust.
+
+![page2](images/page2.png)
 
 5. **Record Storage and Organization**: Once confirmed, the expense record is saved to our structured DB and the embedded receipt file is also saved to our NoSQL Document DB, both hosted on Google cloud Services. The agent will organize HSA-eligible expenses and their proofs for future access. Each record includes details like date, merchant, amount, category, eligibility status, and the associated receipt image or file.
 
@@ -34,6 +42,8 @@ The AI agent will operate through a straightforward, user-centric workflow. Belo
 
 
 7. **Natural Language Query Interface**: A standout feature of our agent will be the ability to query your healthcare spending using natural language. Users can ask questions in plain English via a chat interface and the agent will interpret and answer based on the stored data and web search. For example: “How much have I spent on vision care this year?”, “List all eligible expenses over $100”, or “Show my receipts from 2024.” The agent’s NLP component will parse the query, retrieve relevant data (summing amounts, filtering by category/date, etc.), and respond conversationally. This turns static record-keeping into an interactive experience, allowing users to gain insights easily without manually combing through records. 
+
+![page3](images/page3.png)
 
 Future Capabilities (Not There Yet):
 
